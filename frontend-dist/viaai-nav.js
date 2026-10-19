@@ -2,6 +2,7 @@
  * viaai.si 站群统一导航栏：右上角一排「菜单▾ 语言▾ 主题」，与左上角 logo 水平对齐，原有的右上角按钮整体下移。
  * 不改动上游 Vue 打包产物：独立脚本，由 scripts/patch-dist.mjs 注入 index.html。
  * 菜单顺序与主站（viaai.si）一致：首页 · 资讯 · 开源 · 导航 · 图床 · 关于。
+ * 上传页中间大标题（“图床名称 ImgHub”，.upload-home .header h1.title）隐藏。
  * Logo：换成主站同一张（viaai-logo.png，400×80，图标 + “AI之路”），桌面 200×40 / 手机 150×30，与右上角栏水平对齐，链接指向主站；深色模式用与主站相同的滤镜。
  * 页脚：把上游的「© 年份 Designed by … for You!」换成「© 年份 AI之路 · viaai.si」（随语言变化，viaai.si 链到主站对应语言），并去掉右边的传送门（飞机）图标和链接。
  * 主题：页面上有上游自己的主题按钮（登录页 .toggle-dark、上传页桌面端 .toggle-dark-button，浅/深/自动三态）时，把它放进本栏的主题位置；
@@ -63,7 +64,7 @@
 
   var css =
     // 上游自带的主题按钮和「⋮」里的语言项由本栏代替
-    ".language-switcher,.page-footer .footer-name,.page-footer a:has(.footer-link-icon),.el-dropdown-menu__item:has(.language-switcher),.el-dropdown-menu__item:has(svg[data-icon=\"globe\"]),.viaai-hide{display:none!important}" +
+    ".language-switcher,.upload-home .header h1.title,.page-footer .footer-name,.page-footer a:has(.footer-link-icon),.el-dropdown-menu__item:has(.language-switcher),.el-dropdown-menu__item:has(svg[data-icon=\"globe\"]),.viaai-hide{display:none!important}" +
     // 被下移的上游固定定位元素：top = 原 top + --vn-shift（见 reflow）
     ".viaai-shift{top:calc(var(--vn-top) + var(--vn-shift))!important;translate:var(--vn-dx,0px) 0}" +
     // Logo：固定在左上角的那个（登录页 / 上传页）用主站的 5:1 长条 logo，垂直中心与右上角栏对齐；其余位置（如管理后台小 logo）的方形框只显示图标部分
