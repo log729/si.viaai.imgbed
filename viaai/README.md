@@ -6,7 +6,7 @@
 | 内容 | 位置 |
 |---|---|
 | 补丁脚本（index.html 元数据 / canonical / OG / 图标 / 注入导航，重新生成 .gz） | `scripts/patch-dist.mjs`，`npm run patch:dist` |
-| 站群统一导航（左下角悬浮胶囊，菜单与主站一致，随图床右上角中/英切换） | `viaai/overlay/viaai-nav.js` |
+| 站群统一导航栏（右上角一排「菜单▾ 语言▾ 主题」，与左上角 logo 水平对齐；菜单与主站一致） | `viaai/overlay/viaai-nav.js` |
 | 共享 cookie（`viaai_lang`、`viaai_theme`）→ 图床语言 / 主题（只读） | `viaai/overlay/viaai-init.js` |
 | 界面语言包（目前 ja / es，只覆盖上传页、登录页等用户可见文案）与注入脚本 | `viaai/locales/*.json`、`viaai/overlay/viaai-i18n.js` |
 | robots.txt、favicon、apple-touch-icon、og.png | `viaai/overlay/` |
@@ -33,3 +33,9 @@
 - 当前语言：`localStorage["viaai-locale"]`。共享 cookie `viaai_lang` 变化时覆盖它（`viaai-init.js`）；cookie 的语言图床还没有时用英文。图床右上角中/英按钮和左下角菜单底部的语言选择都只改本站设置，不写 cookie。
 - 加新语言：翻译 `viaai/locales/<code>.json`（键与 `zh-CN`/`en` 一致，保留 `{name}`、`<em>`、`<br>` 等占位符），把 code 加进 `viaai-init.js` 的 `SUPPORTED` 和 `viaai-nav.js` 的 `LABELS`/`NAMES`，再运行 `npm run patch:dist`。
 - 只翻译了用户可见部分（登录、上传、上传设置、历史、链接格式、公开浏览、目录选择等，184 条）。Element Plus 组件自带文案未接入。
+
+## 右上角导航栏
+
+- 位置：固定在右上角，垂直中心与左上角 logo 对齐；上游原有的右上角固定按钮（上传目录、文件管理、「⋮」等）整体下移到它下面（`viaai-nav.js` 里的 `reflow`，按「固定定位、靠近顶部右半边」自动识别，不依赖具体类名）。
+- 菜单▾：首页 · 资讯 · 开源 · 导航 · 图床 · 文件 · 关于（与主站一致）。语言▾：中文 / English / 日本語 / Español，只改图床自己的设置。主题：浅 / 深二选一，通过应用的 vuex store 设置，并写回共享 cookie `viaai_theme`。
+- 隐藏上游自带的主题按钮（三态循环）和「⋮」下拉里的语言切换项。
