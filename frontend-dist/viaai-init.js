@@ -4,7 +4,7 @@
  * - 共享 cookie（Domain=.viaai.si，由主站等站点写入）：viaai_lang（zh|en|hi|es|fr|pt|ru|ja）、viaai_theme（light|dark）
  * - 图床与主站一样有 8 个语言版本（SUPPORTED）；cookie 里不在其中的语言用英文
  * - 语言双向：用户在图床里切换语言（菜单栏的语言下拉）时，写回 viaai_lang，其他站随之变化
- * - 后台（/dashboard、/systemConfig、/customerConfig）只有中文 / English，语言用独立的 cookie imgbed_admin_lang（仅本站，不带 Domain，不写 viaai_lang）；主题仍共用 viaai_theme
+ * - 后台（/dashboard、/systemConfig、/customerConfig）不显示站群导航栏，用后台自带的主题 / 中英文切换：语言只有中文 / English，用独立的 cookie imgbed_admin_lang（仅本站，不带 Domain，不读不写 viaai_lang）；主题仍共用 viaai_theme
  * - 主题双向：用户在图床里切换主题时，写回 viaai_theme，其他站随之变化；
  *   页面加载 / 跟随系统 / 定时深色造成的变化不是用户操作，不写
  * - 写法与主站一致：Domain=.viaai.si、Path=/、保留 30 天、SameSite=Lax; Secure；每次访问对已有的合法取值续期（滑动 30 天）
@@ -47,10 +47,6 @@
       if (!isAdminPage()) return f;
       return readAdminLang() || (f === "zh" ? "zh" : "en");
     },
-    // 当前页面可选的语言：后台只有中文 / English
-    langsFor: function () {
-      return isAdminPage() ? ["zh", "en"] : SUPPORTED;
-    },
     get: function () {
       try {
         var v = window.localStorage.getItem("viaai-locale");
@@ -76,6 +72,11 @@
       window.dispatchEvent(new Event("viaai-lang"));
     },
   };
+
+  // <html class="viaai-admin">：后台页面不显示站群导航栏，用后台自带的主题 / 语言切换（样式见 viaai-nav.js）
+  function syncAdminClass() { document.documentElement.classList.toggle("viaai-admin", isAdminPage()); }
+  syncAdminClass();
+  window.addEventListener("viaai-route", syncAdminClass);
 
   // 单页应用切换路由时发出 viaai-route（前端 ↔ 后台页面的语言、导航栏位置都不同）
   try {
@@ -110,7 +111,9 @@
       var app = ls.getItem("app-locale");
       if (app) cur = app === "zh-CN" ? "zh" : "en";
     }
-    if (cur) ls.setItem("app-locale", cur === "zh" ? "zh-CN" : "en");
+    // 后台页面用后台自己的语言（imgbed_admin_lang，没有就按前端语言推导），不用共享语言
+    var appLang = isAdminPage() ? readAdminLang() || (cur === "zh" ? "zh" : "en") : cur;
+    if (appLang) ls.setItem("app-locale", appLang === "zh" ? "zh-CN" : "en");
     if (lang && SUPPORTED.indexOf(lang) >= 0) setCookie("viaai_lang", lang); // 续期
 
     // 主题：应用把 useDarkMode / cusDarkMode 持久化在 localStorage["vuex"]
