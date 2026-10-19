@@ -18,7 +18,7 @@
 
   function load(code) {
     if (!packs[code]) {
-      packs[code] = fetch("/viaai-locales/" + code + ".json?v=1").then(function (r) {
+      packs[code] = fetch("/viaai-locales/" + code + ".json?v=2").then(function (r) {
         if (!r.ok) throw new Error(String(r.status));
         return r.json();
       });

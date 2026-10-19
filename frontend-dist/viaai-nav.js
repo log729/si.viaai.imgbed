@@ -11,10 +11,14 @@
   var LABELS = {
     zh: { menu: "菜单", language: "语言", theme: "主题", home: "首页", digest: "资讯", oss: "开源", links: "导航", images: "图床", files: "文件", about: "关于", brand: "AI之路", open: "站群导航" },
     en: { menu: "Menu", language: "Language", theme: "Theme", home: "Home", digest: "Digest", oss: "Open Source", links: "Links", images: "Images", files: "Files", about: "About", brand: "AI Road", open: "Sites" },
+    hi: { menu: "मेन्यू", language: "भाषा", theme: "थीम", home: "होम", digest: "समाचार", oss: "ओपन सोर्स", links: "लिंक", images: "इमेज", files: "फ़ाइलें", about: "परिचय", brand: "AI Road", open: "साइटें" },
+    fr: { menu: "Menu", language: "Langue", theme: "Thème", home: "Accueil", digest: "Actualités", oss: "Open source", links: "Liens", images: "Images", files: "Fichiers", about: "À propos", brand: "AI Road", open: "Sites" },
+    pt: { menu: "Menu", language: "Idioma", theme: "Tema", home: "Início", digest: "Notícias", oss: "Open Source", links: "Links", images: "Imagens", files: "Arquivos", about: "Sobre", brand: "AI Road", open: "Sites" },
+    ru: { menu: "Меню", language: "Язык", theme: "Тема", home: "Главная", digest: "Новости", oss: "Open Source", links: "Ссылки", images: "Картинки", files: "Файлы", about: "О сайте", brand: "AI Road", open: "Сайты" },
     ja: { menu: "メニュー", language: "言語", theme: "テーマ", home: "ホーム", digest: "ニュース", oss: "オープンソース", links: "リンク集", images: "画像", files: "ファイル", about: "概要", brand: "AI Road", open: "サイト一覧" },
     es: { menu: "Menú", language: "Idioma", theme: "Tema", home: "Inicio", digest: "Noticias", oss: "Código abierto", links: "Enlaces", images: "Imágenes", files: "Archivos", about: "Acerca de", brand: "AI Road", open: "Sitios" },
   };
-  var NAMES = { zh: "中文", en: "English", ja: "日本語", es: "Español" };
+  var NAMES = { zh: "中文", en: "English", hi: "हिन्दी", es: "Español", fr: "Français", pt: "Português", ru: "Русский", ja: "日本語" };
   var V = window.__viaai;
   var SELF = "images";
   var root = document.documentElement;
@@ -59,7 +63,7 @@
     // 上游自带的主题按钮和「⋮」里的语言项由本栏代替
     ".toggle-dark-button,.language-switcher,.el-dropdown-menu__item:has(.language-switcher),.el-dropdown-menu__item:has(svg[data-icon=\"globe\"]),.viaai-hide{display:none!important}" +
     // 被下移的上游固定定位元素：top = 原 top + --vn-shift（见 reflow）
-    ".viaai-shift{top:calc(var(--vn-top) + var(--vn-shift))!important}" +
+    ".viaai-shift{top:calc(var(--vn-top) + var(--vn-shift))!important;translate:var(--vn-dx,0px) 0}" +
     ".viaai-bar{position:fixed;top:41px;right:30px;z-index:200;display:flex;gap:8px;font:14px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Noto Sans SC',sans-serif;--vn-bg:rgba(255,255,255,.55);--vn-solid:#fff;--vn-fg:#1f2937;--vn-bd:rgba(255,255,255,.7);--vn-hv:rgba(0,0,0,.06)}" +
     ".viaai-bar.dark{--vn-bg:rgba(30,30,30,.55);--vn-solid:#1f2937;--vn-fg:#f3f4f6;--vn-bd:rgba(255,255,255,.15);--vn-hv:rgba(255,255,255,.1)}" +
     ".viaai-bar *{box-sizing:border-box}" +
@@ -80,7 +84,7 @@
   // 原有的右上角按钮（固定定位、贴近顶部右半边）整体下移到本栏下面，本栏与左上角 logo 水平对齐
   var shifted = [];
   function reflow(bar) {
-    shifted.forEach(function (el) { el.classList.remove("viaai-shift"); el.style.removeProperty("--vn-top"); });
+    shifted.forEach(function (el) { el.classList.remove("viaai-shift"); el.style.removeProperty("--vn-top"); el.style.removeProperty("--vn-dx"); });
     shifted = [];
     var barBottom = bar.getBoundingClientRect().bottom;
     var app = document.getElementById("app");
@@ -96,7 +100,17 @@
     if (!cands.length) return;
     var minTop = Math.min.apply(null, cands.map(function (c) { return c[1]; }));
     root.style.setProperty("--vn-shift", Math.max(0, Math.round(barBottom + 8 - minTop)) + "px");
+    // 隐藏上游主题按钮后，它原来的位置会留一个空：把它左边的按钮整体右移补上（上游按钮之间的间距是 10px）。
+    // 用独立的 translate 属性，不覆盖上游按钮自己 hover 时用的 transform
+    var dx = 0;
+    var byLeft = cands.map(function (c) { return c[0].getBoundingClientRect(); }).sort(function (a, b) { return a.left - b.left; });
+    if (byLeft.length >= 3) {
+      var hole = byLeft[byLeft.length - 1].left - byLeft[byLeft.length - 2].right;
+      if (hole > 24) dx = Math.round(hole - 10);
+    }
+    var rightmost = byLeft.length ? byLeft[byLeft.length - 1].left : 0;
     cands.forEach(function (c) {
+      if (dx && c[0].getBoundingClientRect().left < rightmost) c[0].style.setProperty("--vn-dx", dx + "px");
       c[0].style.setProperty("--vn-top", c[1] + "px");
       c[0].classList.add("viaai-shift");
       shifted.push(c[0]);
