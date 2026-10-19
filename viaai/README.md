@@ -42,4 +42,4 @@
 
 ## 页脚
 
-上游页脚 `© 2024-年份 Designed by SanyueQi for You!` 由 `viaai-nav.js` 的 `renderFooter` 替换为 `© 年份 AI之路 · viaai.si`（非中文显示 `AI Road`，`viaai.si` 链到主站对应语言），右边的传送门图标保留（链接仍由后台「页脚传送门链接」配置，默认指向上游作者主页）。上游页脚结构变了就什么都不改。原项目是 MIT 协议，保留 `LICENSE` 即可。
+上游页脚 `© 2024-年份 Designed by SanyueQi for You!` 由 `viaai-nav.js` 的 `renderFooter` 替换为 `© 年份 AI之路 · viaai.si`（非中文显示 `AI Road`，`viaai.si` 链到主站对应语言），并去掉右边的传送门（飞机）图标和链接（后台「页脚传送门链接」配置因此不再生效）。上游页脚结构变了就什么都不改。原项目是 MIT 协议，保留 `LICENSE` 即可。

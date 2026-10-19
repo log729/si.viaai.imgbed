@@ -2,7 +2,7 @@
  * viaai.si 站群统一导航栏：右上角一排「菜单▾ 语言▾ 主题」，与左上角 logo 水平对齐，原有的右上角按钮整体下移。
  * 不改动上游 Vue 打包产物：独立脚本，由 scripts/patch-dist.mjs 注入 index.html。
  * 菜单顺序与主站（viaai.si）一致：首页 · 资讯 · 开源 · 导航 · 图床 · 文件 · 关于。
- * 页脚：把上游的「© 年份 Designed by … for You!」换成「© 年份 AI之路 · viaai.si」（随语言变化，viaai.si 链到主站对应语言），保留右边的传送门图标。
+ * 页脚：把上游的「© 年份 Designed by … for You!」换成「© 年份 AI之路 · viaai.si」（随语言变化，viaai.si 链到主站对应语言），并去掉右边的传送门（飞机）图标和链接。
  * 主题：页面上有上游自己的主题按钮（登录页 .toggle-dark、上传页桌面端 .toggle-dark-button，浅/深/自动三态）时，把它放进本栏的主题位置；
  * 没有可见的（如手机上传页）才用本栏自己的主题按钮（浅/深二选一）和「⋮」下拉里的语言切换项。
  */
@@ -63,10 +63,10 @@
 
   var css =
     // 上游自带的主题按钮和「⋮」里的语言项由本栏代替
-    ".language-switcher,.page-footer .footer-name,.el-dropdown-menu__item:has(.language-switcher),.el-dropdown-menu__item:has(svg[data-icon=\"globe\"]),.viaai-hide{display:none!important}" +
+    ".language-switcher,.page-footer .footer-name,.page-footer a:has(.footer-link-icon),.el-dropdown-menu__item:has(.language-switcher),.el-dropdown-menu__item:has(svg[data-icon=\"globe\"]),.viaai-hide{display:none!important}" +
     // 被下移的上游固定定位元素：top = 原 top + --vn-shift（见 reflow）
     ".viaai-shift{top:calc(var(--vn-top) + var(--vn-shift))!important;translate:var(--vn-dx,0px) 0}" +
-    ".viaai-footer{margin-right:.4em}.viaai-footer a{color:inherit;font-weight:700;text-decoration:none}.viaai-footer a:hover{text-decoration:underline}" +
+    ".viaai-footer{margin:0}.viaai-footer a{color:inherit;font-weight:700;text-decoration:none}.viaai-footer a:hover{text-decoration:underline}" +
     ".viaai-bar{position:fixed;top:39px;right:30px;z-index:200;display:flex;gap:8px;font:14px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Noto Sans SC',sans-serif;--vn-bg:rgba(255,255,255,.55);--vn-solid:#fff;--vn-fg:#1f2937;--vn-bd:rgba(255,255,255,.7);--vn-hv:rgba(0,0,0,.06)}" +
     ".viaai-bar.dark{--vn-bg:rgba(30,30,30,.55);--vn-solid:#1f2937;--vn-fg:#f3f4f6;--vn-bd:rgba(255,255,255,.15);--vn-hv:rgba(255,255,255,.1)}" +
     ".viaai-bar *{box-sizing:border-box}" +
@@ -163,8 +163,10 @@
   var footerKey = "";
   function renderFooter() {
     var p = document.querySelector(".page-footer p");
-    if (!p || !p.lastElementChild) return;
+    if (!p) return;
     p.childNodes.forEach(function (n) { if (n.nodeType === 3 && n.nodeValue) n.nodeValue = ""; });
+    // 传送门（飞机）图标和链接：CSS 的 :has 之外，不支持 :has 的浏览器由这里隐藏
+    p.querySelectorAll("a").forEach(function (a) { if (a.querySelector(".footer-link-icon,svg[data-icon=paper-plane]")) a.classList.add("viaai-hide"); });
     var l = lang();
     var key = l + "|" + new Date().getFullYear();
     var span = p.querySelector(".viaai-footer");
@@ -173,7 +175,7 @@
     if (!span) {
       span = document.createElement("span");
       span.className = "viaai-footer";
-      p.insertBefore(span, p.lastElementChild);
+      p.insertBefore(span, p.firstChild);
     }
     span.textContent = "© " + new Date().getFullYear() + " " + LABELS[l].brand + " · ";
     var a = document.createElement("a");
