@@ -4,6 +4,7 @@
  * - 共享 cookie（Domain=.viaai.si，由主站等站点写入）：viaai_lang（zh|en|hi|es|fr|pt|ru|ja）、viaai_theme（light|dark）
  * - 图床与主站一样有 8 个语言版本（SUPPORTED）；cookie 里不在其中的语言用英文
  * - 语言双向：用户在图床里切换语言（菜单栏的语言下拉）时，写回 viaai_lang，其他站随之变化
+ * - 后台（/dashboard、/systemConfig、/customerConfig）只有中文 / English，语言用独立的 cookie imgbed_admin_lang（仅本站，不带 Domain，不写 viaai_lang）；主题仍共用 viaai_theme
  * - 主题双向：用户在图床里切换主题时，写回 viaai_theme，其他站随之变化；
  *   页面加载 / 跟随系统 / 定时深色造成的变化不是用户操作，不写
  * - 写法与主站一致：Domain=.viaai.si、Path=/、保留 30 天、SameSite=Lax; Secure；每次访问对已有的合法取值续期（滑动 30 天）
@@ -24,10 +25,32 @@
     document.cookie = name + "=" + value + domain + "; Path=/; Max-Age=2592000; SameSite=Lax; Secure";
   }
 
-  // 供 viaai-i18n.js / viaai-nav.js 使用：读取 / 设置图床当前语言（设置时同时写回共享 cookie viaai_lang）
+  // 后台（管理页）的界面只有中文 / English，语言选择用它自己的 cookie imgbed_admin_lang：只在本站（不带 Domain）有效，
+  // 不与前端、其他站共享的 viaai_lang 混用；主题仍然共用 viaai_theme
+  var ADMIN_PATHS = ["/dashboard", "/systemConfig", "/customerConfig"];
+  function isAdminPage() {
+    return ADMIN_PATHS.indexOf(location.pathname.replace(/\/+$/, "")) >= 0;
+  }
+  function readAdminLang() {
+    var m = /(?:^|; )imgbed_admin_lang=(zh|en)/.exec(document.cookie);
+    return m ? m[1] : null;
+  }
+
+  // 供 viaai-i18n.js / viaai-nav.js 使用：读取 / 设置图床当前语言（前端：设置时同时写回共享 cookie viaai_lang；后台：只写 imgbed_admin_lang）
   window.__viaai = {
     langs: SUPPORTED,
     effective: effective,
+    isAdminPage: isAdminPage,
+    // 当前页面该显示的语言：后台是 zh / en（先看后台自己的 cookie，没有就按前端语言：中文→中文，其余→English），前端是共享语言
+    display: function () {
+      var f = this.get();
+      if (!isAdminPage()) return f;
+      return readAdminLang() || (f === "zh" ? "zh" : "en");
+    },
+    // 当前页面可选的语言：后台只有中文 / English
+    langsFor: function () {
+      return isAdminPage() ? ["zh", "en"] : SUPPORTED;
+    },
     get: function () {
       try {
         var v = window.localStorage.getItem("viaai-locale");
@@ -38,6 +61,12 @@
     },
     set: function (code) {
       if (SUPPORTED.indexOf(code) < 0) return;
+      if (isAdminPage()) {
+        if (code !== "zh" && code !== "en") return;
+        document.cookie = "imgbed_admin_lang=" + code + "; Path=/; Max-Age=2592000; SameSite=Lax; Secure"; // 仅本站，不带 Domain
+        window.dispatchEvent(new Event("viaai-lang"));
+        return;
+      }
       try {
         window.localStorage.setItem("viaai-locale", code);
         window.localStorage.setItem("app-locale", code === "zh" ? "zh-CN" : "en");
@@ -47,6 +76,19 @@
       window.dispatchEvent(new Event("viaai-lang"));
     },
   };
+
+  // 单页应用切换路由时发出 viaai-route（前端 ↔ 后台页面的语言、导航栏位置都不同）
+  try {
+    ["pushState", "replaceState"].forEach(function (m) {
+      var orig = history[m];
+      history[m] = function () {
+        var r = orig.apply(this, arguments);
+        window.dispatchEvent(new Event("viaai-route"));
+        return r;
+      };
+    });
+    window.addEventListener("popstate", function () { window.dispatchEvent(new Event("viaai-route")); });
+  } catch (e) {}
 
   try {
     var ls = window.localStorage;

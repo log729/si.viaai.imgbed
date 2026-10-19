@@ -28,7 +28,7 @@
 
   function apply() {
     if (!i18n) return;
-    var code = V.get();
+    var code = V.display(); // 前端：共享语言；后台：zh / en（后台自己的 cookie）
     var token = ++seq;
     if (APP[code]) {
       if (i18n.locale !== APP[code]) i18n.locale = APP[code];
@@ -80,11 +80,12 @@
   }, 100);
 
   window.addEventListener("viaai-lang", apply);
+  window.addEventListener("viaai-route", apply); // 前端 ↔ 后台页面之间切换，显示语言不同
 
   // 用户点击右上角中/英按钮：应用把 <html lang> 改成 zh-CN / en。若与当前语言不一致（例如当前是 ja），记下新的选择（V.set 会同时写回共享 cookie）。
   new MutationObserver(function () {
     if (!ready) return;
     var l = root.lang === "zh-CN" ? "zh" : root.lang === "en" ? "en" : null;
-    if (l && l !== V.get()) V.set(l);
+    if (l && l !== V.display()) V.set(l);
   }).observe(root, { attributes: true, attributeFilter: ["lang"] });
 })();
