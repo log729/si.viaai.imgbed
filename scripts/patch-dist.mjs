@@ -44,7 +44,7 @@ const head = [
   '<meta property="og:image:height" content="630">',
   '<meta name="twitter:card" content="summary_large_image">',
   // 同步共享 cookie 的语言 / 主题：非 defer，需在应用脚本（defer）之前执行
-  '<script src="/viaai-init.js?v=1"></script>',
+  '<script src="/viaai-init.js?v=2"></script>',
   '<script defer src="/viaai-nav.js?v=3"></script>',
   END,
 ].join('');

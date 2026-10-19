@@ -19,7 +19,8 @@
 ## 语言 / 主题与共享 cookie
 
 - 主站及其他六个子站在 `.viaai.si` 下共享 `viaai_lang`（zh/en/hi/es/fr/pt/ru/ja）和 `viaai_theme`（light/dark）。
-- 图床对这两个 cookie **只读、不写、不续期**（`viaai-init.js`、`viaai-nav.js` 里没有任何 `document.cookie =`）。
+- `viaai_lang`：图床**只读**，不写、不续期。
+- `viaai_theme`：图床**可读可写**。用户在图床右上角切换主题时写回 cookie（`Domain=.viaai.si; Max-Age=30天`，与主站写法一致），其他站随之变化；加载、跟随系统、定时深色等非用户操作造成的变化不写（以 1 秒内是否有点击 / 按键判断）。
 - 图床只有中文 / 英文：`zh` → 中文，其余语言一律 → 英文；主题直接对应。
 - 同步方式：页面加载时把 cookie 的值写进图床自己的 localStorage（`app-locale`、`vuex.useDarkMode/cusDarkMode`）。只有 cookie 的值相对上次同步变了才覆盖，所以在图床右上角手动切换的选择（只改本站 localStorage）会保留，直到别的站再次切换。
 - 左下角菜单的文字跟随图床当前显示的语言（中/英）；跳往其他站的链接在“图床显示的是 cookie 语言的回退”时仍带 cookie 的原语言（如 `ja` → `/ja`）。
