@@ -3,7 +3,7 @@
  * 幂等，可重复运行：node scripts/patch-dist.mjs
  *
  * 1. frontend-dist/index.html：站群元数据（title/description/canonical/OG/图标/viaai-site）+ 注入 viaai-nav.js
- * 2. viaai/overlay/* 拷贝到 frontend-dist/（viaai-nav.js、robots.txt、favicon.ico、apple-touch-icon.png、og.png）
+ * 2. viaai/overlay/* 拷贝到 frontend-dist/（viaai-init.js、viaai-nav.js、robots.txt、favicon.ico、apple-touch-icon.png、og.png）
  * 3. 重新生成 index.html.gz
  *
  * 不改上游压缩后的 JS（页脚 / 署名链接保持原样，符合 MIT 协议）。
@@ -43,7 +43,9 @@ const head = [
   '<meta property="og:image:width" content="1200">',
   '<meta property="og:image:height" content="630">',
   '<meta name="twitter:card" content="summary_large_image">',
-  '<script defer src="/viaai-nav.js?v=1"></script>',
+  // 同步共享 cookie 的语言 / 主题：非 defer，需在应用脚本（defer）之前执行
+  '<script src="/viaai-init.js?v=1"></script>',
+  '<script defer src="/viaai-nav.js?v=3"></script>',
   END,
 ].join('');
 
