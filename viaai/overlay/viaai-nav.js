@@ -1,7 +1,7 @@
 /*
  * viaai.si 站群统一导航栏：右上角一排「菜单▾ 语言▾ 主题」，与左上角 logo 水平对齐，原有的右上角按钮整体下移。
  * 不改动上游 Vue 打包产物：独立脚本，由 scripts/patch-dist.mjs 注入 index.html。
- * 菜单顺序与主站（viaai.si）一致：首页 · 资讯 · 开源 · 导航 · 图床 · 文件 · 关于。
+ * 菜单顺序与主站（viaai.si）一致：首页 · 资讯 · 开源 · 导航 · 图床 · 关于。
  * Logo：换成主站同一张（viaai-logo.png，400×80，图标 + “AI之路”），桌面 200×40 / 手机 150×30，与右上角栏水平对齐，链接指向主站；深色模式用与主站相同的滤镜。
  * 页脚：把上游的「© 年份 Designed by … for You!」换成「© 年份 AI之路 · viaai.si」（随语言变化，viaai.si 链到主站对应语言），并去掉右边的传送门（飞机）图标和链接。
  * 主题：页面上有上游自己的主题按钮（登录页 .toggle-dark、上传页桌面端 .toggle-dark-button，浅/深/自动三态）时，把它放进本栏的主题位置；
@@ -12,14 +12,14 @@
   window.__viaaiNav = true;
 
   var LABELS = {
-    zh: { menu: "菜单", language: "语言", theme: "主题", home: "首页", digest: "资讯", oss: "开源", links: "导航", images: "图床", files: "文件", about: "关于", brand: "AI之路", open: "站群导航" },
-    en: { menu: "Menu", language: "Language", theme: "Theme", home: "Home", digest: "Digest", oss: "Open Source", links: "Links", images: "Images", files: "Files", about: "About", brand: "AI Road", open: "Sites" },
-    hi: { menu: "मेन्यू", language: "भाषा", theme: "थीम", home: "होम", digest: "समाचार", oss: "ओपन सोर्स", links: "लिंक", images: "इमेज", files: "फ़ाइलें", about: "परिचय", brand: "AI Road", open: "साइटें" },
-    fr: { menu: "Menu", language: "Langue", theme: "Thème", home: "Accueil", digest: "Actualités", oss: "Open source", links: "Liens", images: "Images", files: "Fichiers", about: "À propos", brand: "AI Road", open: "Sites" },
-    pt: { menu: "Menu", language: "Idioma", theme: "Tema", home: "Início", digest: "Notícias", oss: "Open Source", links: "Links", images: "Imagens", files: "Arquivos", about: "Sobre", brand: "AI Road", open: "Sites" },
-    ru: { menu: "Меню", language: "Язык", theme: "Тема", home: "Главная", digest: "Новости", oss: "Open Source", links: "Ссылки", images: "Картинки", files: "Файлы", about: "О сайте", brand: "AI Road", open: "Сайты" },
-    ja: { menu: "メニュー", language: "言語", theme: "テーマ", home: "ホーム", digest: "ニュース", oss: "オープンソース", links: "リンク集", images: "画像", files: "ファイル", about: "概要", brand: "AI Road", open: "サイト一覧" },
-    es: { menu: "Menú", language: "Idioma", theme: "Tema", home: "Inicio", digest: "Noticias", oss: "Código abierto", links: "Enlaces", images: "Imágenes", files: "Archivos", about: "Acerca de", brand: "AI Road", open: "Sitios" },
+    zh: { menu: "菜单", language: "语言", theme: "主题", home: "首页", digest: "资讯", oss: "开源", links: "导航", images: "图床", about: "关于", brand: "AI之路", open: "站群导航" },
+    en: { menu: "Menu", language: "Language", theme: "Theme", home: "Home", digest: "Digest", oss: "Open Source", links: "Links", images: "Images", about: "About", brand: "AI Road", open: "Sites" },
+    hi: { menu: "मेन्यू", language: "भाषा", theme: "थीम", home: "होम", digest: "समाचार", oss: "ओपन सोर्स", links: "लिंक", images: "इमेज", about: "परिचय", brand: "AI Road", open: "साइटें" },
+    fr: { menu: "Menu", language: "Langue", theme: "Thème", home: "Accueil", digest: "Actualités", oss: "Open source", links: "Liens", images: "Images", about: "À propos", brand: "AI Road", open: "Sites" },
+    pt: { menu: "Menu", language: "Idioma", theme: "Tema", home: "Início", digest: "Notícias", oss: "Open Source", links: "Links", images: "Imagens", about: "Sobre", brand: "AI Road", open: "Sites" },
+    ru: { menu: "Меню", language: "Язык", theme: "Тема", home: "Главная", digest: "Новости", oss: "Open Source", links: "Ссылки", images: "Картинки", about: "О сайте", brand: "AI Road", open: "Сайты" },
+    ja: { menu: "メニュー", language: "言語", theme: "テーマ", home: "ホーム", digest: "ニュース", oss: "オープンソース", links: "リンク集", images: "画像", about: "概要", brand: "AI Road", open: "サイト一覧" },
+    es: { menu: "Menú", language: "Idioma", theme: "Tema", home: "Inicio", digest: "Noticias", oss: "Código abierto", links: "Enlaces", images: "Imágenes", about: "Acerca de", brand: "AI Road", open: "Sitios" },
   };
   var NAMES = { zh: "中文", en: "English", hi: "हिन्दी", es: "Español", fr: "Français", pt: "Português", ru: "Русский", ja: "日本語" };
   var V = window.__viaai;
@@ -32,7 +32,7 @@
     return V ? V.get() : "zh";
   }
 
-  // 主站与资讯/开源/导航站按 <站点>/<lang> 区分语言，图床、文件站不分语言。
+  // 主站与资讯/开源/导航站按 <站点>/<lang> 区分语言，图床不分语言。
   // 共享 cookie viaai_lang 的值不在图床的 8 种语言里（如 de）、图床显示的是它的回退语言（英文）时，
   // 链接仍带 cookie 的语言，让用户去到其他站时保持原来的语言；用户在图床里手动换了语言则按图床显示的为准。
   var SHARED = ["zh", "en", "hi", "es", "fr", "pt", "ru", "ja"];
@@ -49,7 +49,6 @@
       ["oss", "https://soft.viaai.si" + sfx],
       ["links", "https://nav.viaai.si" + sfx],
       ["images", "https://imgbed.viaai.si"],
-      ["files", "https://file.logang.com"],
       ["about", "https://viaai.si" + sfx + "/about"],
     ];
   }
