@@ -6,6 +6,7 @@
  * 上传页中间大标题（“图床名称 ImgHub”，.upload-home .header h1.title）隐藏。
  * Logo：换成主站同一张（viaai-logo.png，400×80，图标 + “AI之路”），桌面 200×40 / 手机 150×30，与右上角栏水平对齐，链接指向主站；深色模式用与主站相同的滤镜。
  * 页脚：把上游的「© 年份 Designed by … for You!」换成「© 年份 AI之路 · viaai.si」（随语言变化，viaai.si 链到主站对应语言），并去掉右边的传送门（飞机）图标和链接。
+ * 后台页面（/dashboard、/systemConfig、/customerConfig）：栏放在顶部工具栏「文件管理」下拉的右边（垂直居中）；语言只有中文 / English，用独立的 cookie imgbed_admin_lang（不与前端共用 viaai_lang），主题仍共用；后台工具栏自带的主题按钮隐藏。
  * 主题：本栏自己的主题按钮，样式与行为和其他站点一致（同一个半实心圆图标、浅/深二选一）；上游自带的主题按钮（浅/深/自动三态）隐藏。和「⋮」下拉里的语言切换项。
  */
 (function () {
@@ -30,7 +31,7 @@
   // 菜单文字跟随图床当前显示的语言。显示语言由 viaai-init.js 按共享 cookie 同步（window.__viaai），
   // 用户在本栏的语言下拉里切换时，由 window.__viaai.set 同时写回共享 cookie viaai_lang（本脚本自己不直接写 cookie）。
   function lang() {
-    return V ? V.get() : "zh";
+    return V ? V.display() : "zh";
   }
 
   // 主站与资讯/开源/导航站按 <站点>/<lang> 区分语言，图床不分语言。
@@ -64,7 +65,7 @@
 
   var css =
     // 上游自带的主题按钮和「⋮」里的语言项由本栏代替
-    ".toggle-dark,.toggle-dark-button,.language-switcher,.upload-home .header h1.title,.page-footer .footer-name,.page-footer a:has(.footer-link-icon),.el-dropdown-menu__item:has(.language-switcher),.el-dropdown-menu__item:has(svg[data-icon=\"globe\"]),.viaai-hide{display:none!important}" +
+    ".toggle-dark,.toggle-dark-button,.admin-header-actions>div.admin-header-control,.language-switcher,.upload-home .header h1.title,.page-footer .footer-name,.page-footer a:has(.footer-link-icon),.el-dropdown-menu__item:has(.language-switcher),.el-dropdown-menu__item:has(svg[data-icon=\"globe\"]),.viaai-hide{display:none!important}" +
     // 被下移的上游固定定位元素：top = 原 top + --vn-shift（见 reflow）
     ".viaai-shift{top:calc(var(--vn-top) + var(--vn-shift))!important;translate:var(--vn-dx,0px) 0}" +
     // Logo：固定在左上角的那个（登录页 / 上传页）用主站的 5:1 长条 logo，垂直中心与右上角栏对齐；其余位置（如管理后台小 logo）的方形框只显示图标部分
@@ -75,6 +76,9 @@
     // 登录页标题：去掉手写体（Pacifico），改用与表单其余文字相同的普通字体，字号收小
     ".login-title{font-family:Avenir,Helvetica,Arial,'PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif!important;font-size:1.75rem!important;font-weight:700!important;letter-spacing:1px!important;cursor:default!important}" +
     "@media (max-width:768px){.login-title{font-size:1.4rem!important}}" +
+    ".viaai-bar .vn-ico{display:none}" +
+    "@media (max-width:768px){.viaai-bar--admin{gap:6px}.viaai-bar--admin .vn-ico{display:inline-flex}.viaai-bar--admin .vn-label,.viaai-bar--admin .vn-caret{display:none}" +
+    ".viaai-bar--admin .vn-btn{width:30px;height:30px;padding:0;justify-content:center}.viaai-bar--admin .vn-btn.vn-theme{width:30px;height:30px}}" +
     ".viaai-footer{margin:0}.viaai-footer a{color:inherit;font-weight:700;text-decoration:none}.viaai-footer a:hover{text-decoration:underline}" +
     ".viaai-bar{position:fixed;top:38px;right:30px;z-index:200;display:flex;gap:8px;font:14px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Noto Sans SC',sans-serif;--vn-bg:rgba(255,255,255,.55);--vn-solid:#fff;--vn-fg:#1f2937;--vn-bd:rgba(255,255,255,.7);--vn-hv:rgba(0,0,0,.06)}" +
     ".viaai-bar.dark{--vn-bg:rgba(30,30,30,.55);--vn-solid:#1f2937;--vn-fg:#f3f4f6;--vn-bd:rgba(255,255,255,.15);--vn-hv:rgba(255,255,255,.1)}" +
@@ -105,6 +109,7 @@
   // 原有的右上角按钮（固定定位、贴近顶部右半边）整体下移到本栏下面，本栏与左上角 logo 水平对齐
   var shifted = [];
   function reflow(bar) {
+    placeBar(bar);
     shifted.forEach(function (el) { el.classList.remove("viaai-shift"); el.style.removeProperty("--vn-top"); el.style.removeProperty("--vn-dx"); });
     shifted = [];
     var barBottom = bar.getBoundingClientRect().bottom;
@@ -176,6 +181,32 @@
     a.href = items(l)[0][1];
     a.textContent = "viaai.si";
     span.appendChild(a);
+  }
+
+  // 下拉按钮：图标（仅后台手机宽度显示）+ 文字 + 小三角；aria-label 保证只剩图标时仍可访问
+  var ICON_MENU = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>';
+  var ICON_LANG = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
+  function fillBtn(btn, icon, text) {
+    btn.textContent = "";
+    var i = document.createElement("span"); i.className = "vn-ico"; i.innerHTML = icon; btn.appendChild(i);
+    var l = document.createElement("span"); l.className = "vn-label"; l.textContent = text; btn.appendChild(l);
+    var c = document.createElement("span"); c.className = "vn-caret"; c.textContent = "▾"; btn.appendChild(c);
+    btn.setAttribute("aria-label", text);
+  }
+
+  // 后台页面：栏放在顶部工具栏里「文件管理」下拉的右边（垂直居中），不再压在右边的图标上；其余页面保持在右上角
+  function placeBar(bar) {
+    var admin = !!(V && V.isAdminPage());
+    bar.classList.toggle("viaai-bar--admin", admin);
+    ["left", "top", "right"].forEach(function (k) { bar.style.removeProperty(k); });
+    if (!admin) return;
+    var tabs = document.querySelector(".admin-header-content .tabs");
+    if (!tabs) return;
+    var r = tabs.getBoundingClientRect();
+    if (!r.width) return;
+    bar.style.setProperty("left", Math.round(r.right + 12) + "px", "important");
+    bar.style.setProperty("right", "auto", "important");
+    bar.style.setProperty("top", Math.round(r.top + r.height / 2 - bar.offsetHeight / 2) + "px", "important");
   }
 
   function build() {
@@ -254,16 +285,14 @@
       bar.classList.toggle("dark", dark());
       var l = lang();
       themeBtn.innerHTML = THEME_ICON;
-      if (l === cur) { return; }
-      cur = l;
+      placeBar(bar);
+      var key = l + "|" + (V && V.isAdminPage() ? "admin" : "");
+      if (key === cur) { return; }
+      cur = key;
       var t = LABELS[l];
       bar.setAttribute("aria-label", t.open);
-      menu.btn.innerHTML = "";
-      menu.btn.appendChild(document.createTextNode(t.menu + " "));
-      var c1 = document.createElement("span"); c1.className = "vn-caret"; c1.textContent = "▾"; menu.btn.appendChild(c1);
-      langDd.btn.innerHTML = "";
-      langDd.btn.appendChild(document.createTextNode(t.language + " "));
-      var c2 = document.createElement("span"); c2.className = "vn-caret"; c2.textContent = "▾"; langDd.btn.appendChild(c2);
+      fillBtn(menu.btn, ICON_MENU, t.menu);
+      fillBtn(langDd.btn, ICON_LANG, t.language);
       themeBtn.setAttribute("aria-label", t.theme);
       themeBtn.title = t.theme;
 
@@ -281,7 +310,7 @@
 
       // 语言选择：切换图床显示语言，并写回共享 cookie（见 viaai-init.js 的 __viaai.set）
       langDd.ul.textContent = "";
-      (V ? V.langs : ["zh", "en"]).forEach(function (code) {
+      (V ? V.langsFor() : ["zh", "en"]).forEach(function (code) {
         var li = document.createElement("li");
         var a = document.createElement("a");
         a.href = "#";
@@ -305,6 +334,7 @@
     new MutationObserver(render).observe(root, { attributes: true, attributeFilter: ["lang", "class"] });
     window.addEventListener("storage", render);
     window.addEventListener("viaai-lang", render);
+    window.addEventListener("viaai-route", function () { render(); schedule(); });
 
     // 下移上游的右上角按钮：应用异步渲染，DOM 变化 / 窗口尺寸变化后重新计算
     // 不支持 :has 的浏览器：「⋮」下拉（挂在 body 下）里带地球图标的语言项由脚本隐藏

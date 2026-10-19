@@ -53,3 +53,10 @@
 ## 上传页大标题
 
 上传页中间的大标题（“图床名称 ImgHub”，`.upload-home .header h1.title`）由 `viaai-nav.js` 的样式隐藏（上游代码已压缩，不改源码）。登录页标题（`.login-title`）不受影响。
+
+## 后台页面（/dashboard、/systemConfig、/customerConfig）
+
+- **位置**：栏放在顶部工具栏「文件管理」下拉的右边（垂直居中，随它的宽度移动），不再压在右边的图标上；手机宽度下菜单 / 语言缩成图标（☰ / 地球），主题按钮同高。判断页面靠路径（`viaai-init.js` 的 `ADMIN_PATHS`），单页应用切换路由时由 `viaai-route` 事件重新定位。
+- **语言**：后台只有中文 / English，下拉里只提供这两项；选择存在独立的 cookie `imgbed_admin_lang`（只在本站有效，不带 `Domain`），**不读不写**前端和其他站共用的 `viaai_lang`。没选过时：前端语言是中文 → 中文，其余语言 → English。回到前端页面仍按共享的 `viaai_lang`。
+- **主题**：仍共用 `viaai_theme`；后台工具栏自带的主题按钮隐藏，只用栏里这一个。
+- 加新的后台页面路径时，把路径加进 `viaai-init.js` 的 `ADMIN_PATHS`。

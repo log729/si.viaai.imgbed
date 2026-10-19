@@ -44,10 +44,10 @@ const head = [
   '<meta property="og:image:height" content="630">',
   '<meta name="twitter:card" content="summary_large_image">',
   // 同步共享 cookie 的语言 / 主题：非 defer，需在应用脚本（defer）之前执行
-  '<script src="/viaai-init.js?v=5"></script>',
+  '<script src="/viaai-init.js?v=6"></script>',
   // 在应用挂载后注册 hi / es / fr / pt / ru / ja 语言包；defer 脚本按顺序执行，须在 app 脚本之后
-  '<script defer src="/viaai-i18n.js?v=4"></script>',
-  '<script defer src="/viaai-nav.js?v=17"></script>',
+  '<script defer src="/viaai-i18n.js?v=5"></script>',
+  '<script defer src="/viaai-nav.js?v=19"></script>',
   END,
 ].join('');
 
