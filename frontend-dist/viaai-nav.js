@@ -26,13 +26,13 @@
   var root = document.documentElement;
 
   // 菜单文字跟随图床当前显示的语言。显示语言由 viaai-init.js 按共享 cookie 同步（window.__viaai），
-  // 用户在图床右上角（或本菜单底部）切换时只改本站 localStorage。本脚本只读 cookie，不写。
+  // 用户在本栏的语言下拉里切换时，由 window.__viaai.set 同时写回共享 cookie viaai_lang（本脚本自己不直接写 cookie）。
   function lang() {
     return V ? V.get() : "zh";
   }
 
   // 主站与资讯/开源/导航站按 <站点>/<lang> 区分语言，图床、文件站不分语言。
-  // 共享 cookie viaai_lang（只读）的语言图床没有（如 fr）、图床显示的是它的回退语言（英文）时，
+  // 共享 cookie viaai_lang 的值不在图床的 8 种语言里（如 de）、图床显示的是它的回退语言（英文）时，
   // 链接仍带 cookie 的语言，让用户去到其他站时保持原来的语言；用户在图床里手动换了语言则按图床显示的为准。
   var SHARED = ["zh", "en", "hi", "es", "fr", "pt", "ru", "ja"];
   function siteLang(l) {
@@ -283,7 +283,7 @@
         menu.ul.appendChild(li);
       });
 
-      // 语言选择：只改图床自己的显示语言（不写共享 cookie）
+      // 语言选择：切换图床显示语言，并写回共享 cookie（见 viaai-init.js 的 __viaai.set）
       langDd.ul.textContent = "";
       (V ? V.langs : ["zh", "en"]).forEach(function (code) {
         var li = document.createElement("li");

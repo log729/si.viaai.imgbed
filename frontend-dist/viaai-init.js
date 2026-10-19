@@ -3,9 +3,10 @@
  *
  * - 共享 cookie（Domain=.viaai.si，由主站等站点写入）：viaai_lang（zh|en|hi|es|fr|pt|ru|ja）、viaai_theme（light|dark）
  * - 图床与主站一样有 8 个语言版本（SUPPORTED）；cookie 里不在其中的语言用英文
- * - 语言只读：图床右上角的语言切换只改本站 localStorage，不写 viaai_lang
- * - 主题双向：用户在图床里切换主题时，写回 viaai_theme（写法与主站一致），其他站随之变化；
+ * - 语言双向：用户在图床里切换语言（菜单栏的语言下拉）时，写回 viaai_lang，其他站随之变化
+ * - 主题双向：用户在图床里切换主题时，写回 viaai_theme，其他站随之变化；
  *   页面加载 / 跟随系统 / 定时深色造成的变化不是用户操作，不写
+ * - 写法与主站一致：Domain=.viaai.si、Path=/、保留 30 天、SameSite=Lax; Secure；每次访问对已有的合法取值续期（滑动 30 天）
  * - 仅当共享 cookie 的值相对上次同步“变了”才覆盖本站设置，所以在图床里手动切换的选择会保留，直到别的站再次切换
  *
  * 必须在应用脚本（defer）之前同步执行，由 scripts/patch-dist.mjs 以非 defer 方式注入 <head>。
@@ -17,7 +18,13 @@
     return SUPPORTED.indexOf(c) >= 0 ? c : c === "zh" ? "zh" : "en";
   }
 
-  // 供 viaai-i18n.js / viaai-nav.js 使用：读取 / 设置图床当前语言（只改本站 localStorage，不写 cookie）
+  // 与主站一致的写法：*.viaai.si 共享，保留 30 天
+  function setCookie(name, value) {
+    var domain = /(^|\.)viaai\.si$/.test(location.hostname) ? "; Domain=.viaai.si" : "";
+    document.cookie = name + "=" + value + domain + "; Path=/; Max-Age=2592000; SameSite=Lax; Secure";
+  }
+
+  // 供 viaai-i18n.js / viaai-nav.js 使用：读取 / 设置图床当前语言（设置时同时写回共享 cookie viaai_lang）
   window.__viaai = {
     langs: SUPPORTED,
     effective: effective,
@@ -34,7 +41,9 @@
       try {
         window.localStorage.setItem("viaai-locale", code);
         window.localStorage.setItem("app-locale", code === "zh" ? "zh-CN" : "en");
+        window.localStorage.setItem("viaai-seen-lang", code); // 自己写的 cookie，下次加载不当作“别的站改了”
       } catch (e) {}
+      setCookie("viaai_lang", code);
       window.dispatchEvent(new Event("viaai-lang"));
     },
   };
@@ -60,6 +69,7 @@
       if (app) cur = app === "zh-CN" ? "zh" : "en";
     }
     if (cur) ls.setItem("app-locale", cur === "zh" ? "zh-CN" : "en");
+    if (lang && SUPPORTED.indexOf(lang) >= 0) setCookie("viaai_lang", lang); // 续期
 
     // 主题：应用把 useDarkMode / cusDarkMode 持久化在 localStorage["vuex"]
     var theme = cookie(/(?:^|; )viaai_theme=(light|dark)/);
@@ -71,6 +81,7 @@
       ls.setItem("vuex", JSON.stringify(state));
       ls.setItem("viaai-seen-theme", theme);
     }
+    if (theme) setCookie("viaai_theme", theme); // 续期
   } catch (e) { /* localStorage / cookie 不可用就保持图床自己的设置 */ }
 
   // ---- 主题写回共享 cookie（仅用户在图床里切换时）----
@@ -91,9 +102,7 @@
       last = dark;
       if (Date.now() - lastGesture > 1000) return;
       var v = dark ? "dark" : "light";
-      // 与主站一致：*.viaai.si 共享，保留 30 天
-      var domain = /(^|\.)viaai\.si$/.test(location.hostname) ? "; Domain=.viaai.si" : "";
-      document.cookie = "viaai_theme=" + v + domain + "; Path=/; Max-Age=2592000; SameSite=Lax; Secure";
+      setCookie("viaai_theme", v);
       try { window.localStorage.setItem("viaai-seen-theme", v); } catch (e) {}
     }).observe(root, { attributes: true, attributeFilter: ["class"] });
   } catch (e) {}

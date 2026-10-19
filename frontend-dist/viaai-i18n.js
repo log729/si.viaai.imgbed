@@ -2,7 +2,7 @@
  * viaai.si 站群：给图床补充 zh-CN / en 之外的界面语言（viaai/locales/<code>.json，只覆盖用户能看到的上传页、登录页等）。
  *
  * 不改上游打包产物：等应用挂载后，取出它的 vue-i18n 实例（#app.__vue_app__），用 setLocaleMessage 注册语言包并切换。
- * 当前语言由 viaai-init.js 按共享 cookie 同步（window.__viaai），本脚本只读 cookie、不写；
+ * 当前语言由 viaai-init.js 按共享 cookie 同步（window.__viaai）；用户切换语言时由 window.__viaai.set 写回共享 cookie viaai_lang；
  * 用户用右上角的中/英按钮切换时，应用自己改 <html lang>，这里据此同步回 viaai-locale。
  * 语言包里没有的文案（如管理后台）回退到英文。
  */
@@ -77,7 +77,7 @@
 
   window.addEventListener("viaai-lang", apply);
 
-  // 用户点击右上角中/英按钮：应用把 <html lang> 改成 zh-CN / en。若与当前语言不一致（例如当前是 ja），记下新的选择。
+  // 用户点击右上角中/英按钮：应用把 <html lang> 改成 zh-CN / en。若与当前语言不一致（例如当前是 ja），记下新的选择（V.set 会同时写回共享 cookie）。
   new MutationObserver(function () {
     if (!ready) return;
     var l = root.lang === "zh-CN" ? "zh" : root.lang === "en" ? "en" : null;
