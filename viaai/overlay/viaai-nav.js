@@ -1,7 +1,7 @@
 /*
  * viaai.si 站群统一导航栏：右上角一排「菜单▾ 语言▾ 主题」，与左上角 logo 水平对齐，原有的右上角按钮整体下移。
  * 不改动上游 Vue 打包产物：独立脚本，由 scripts/patch-dist.mjs 注入 index.html。
- * 菜单顺序与主站（viaai.si）一致：首页 · 资讯 · 开源 · 导航 · 图床 · 关于。
+ * 第一个按钮是「首页」（链接到主站首页，随语言），右边的小三角展开菜单：资讯 · 开源 · 导航 · 图床 · 关于（顺序与主站一致）。
  * 登录页标题（“登录”）：去掉手写体，用普通字体；文字本身由 viaai-i18n.js 覆盖语言包（应用自带 zh-CN / en）和 viaai/locales/*.json 提供。
  * 上传页中间大标题（“图床名称 ImgHub”，.upload-home .header h1.title）不显示但保留位置，logo 放在这里。
  * Logo：换成主站同一张（viaai-logo.png，400×80，图标 + “AI之路”），链接指向图床首页；首页（上传页）放在上传框上方正中间（桌面 240×48 / 手机 180×36），其余页面在左上角（桌面 200×40 / 手机 150×30，与右上角栏水平对齐）；深色模式用与主站相同的滤镜。
@@ -105,6 +105,8 @@
     ".viaai-bar{--vn-line:#e1e8f2;--vn-navy:#0a1f44;--vn-primary:#1d7af3}.viaai-bar.dark{--vn-line:#25324a;--vn-navy:#e6edf7;--vn-primary:#4c97f6}" +
     ".viaai-bar{pointer-events:none}.viaai-bar .viaai-dd,.viaai-bar .vn-theme{pointer-events:auto}" +
     ".viaai-bar .vn-caret{font-size:10px;opacity:.7}" +
+    ".viaai-bar .vn-split{display:flex}.viaai-bar .vn-split .vn-home{border-radius:10px 0 0 10px;border-right-width:0}" +
+    ".viaai-bar .vn-split .vn-drop{border-radius:0 10px 10px 0;padding:0 8px;font-size:10px;opacity:1}" +
     ".viaai-bar ul{display:none;list-style:none;margin:6px 0 0;padding:6px;position:absolute;right:0;top:100%;min-width:140px;background:var(--vn-solid);border:1px solid var(--vn-bd);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.2)}" +
     ".viaai-dd.open ul{display:block}" +
     ".viaai-bar li a{display:block;padding:7px 12px;border-radius:8px;color:var(--vn-fg);text-decoration:none;white-space:nowrap}" +
@@ -231,6 +233,12 @@
       return { wrap: wrap, btn: btn, ul: ul, key: key };
     }
     var menu = dropdown("menu");
+    // 第一个按钮拆成「首页」链接（到主站首页）+ 小三角（展开菜单）两半，视觉上是一个整体
+    var homeLink = document.createElement("a");
+    homeLink.className = "vn-btn vn-home";
+    menu.wrap.insertBefore(homeLink, menu.btn);
+    menu.wrap.classList.add("vn-split");
+    menu.btn.classList.add("vn-drop");
     var langDd = dropdown("language");
     var themeBtn = document.createElement("button");
     themeBtn.type = "button";
@@ -282,13 +290,17 @@
       cur = l;
       var t = LABELS[l];
       bar.setAttribute("aria-label", t.open);
-      fillBtn(menu.btn, t.menu);
+      homeLink.textContent = t.home;
+      homeLink.href = items(l)[0][1];
+      menu.btn.textContent = "▾";
+      menu.btn.setAttribute("aria-label", t.menu);
       fillBtn(langDd.btn, t.language);
       themeBtn.setAttribute("aria-label", t.theme);
       themeBtn.title = t.theme;
 
       menu.ul.textContent = "";
       items(l).forEach(function (it) {
+        if (it[0] === "home") return; // 「首页」已经是栏上的链接
         var li = document.createElement("li");
         var a = document.createElement("a");
         a.href = it[1];
