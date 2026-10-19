@@ -43,3 +43,9 @@
 ## 页脚
 
 上游页脚 `© 2024-年份 Designed by SanyueQi for You!` 由 `viaai-nav.js` 的 `renderFooter` 替换为 `© 年份 AI之路 · viaai.si`（非中文显示 `AI Road`，`viaai.si` 链到主站对应语言），并去掉右边的传送门（飞机）图标和链接（后台「页脚传送门链接」配置因此不再生效）。上游页脚结构变了就什么都不改。原项目是 MIT 协议，保留 `LICENSE` 即可。
+
+## Logo
+
+- 用主站同一张图 `viaai/overlay/viaai-logo.png`（400×80，图标 + “AI之路”，来自 `si.viaai/public/logo.png`；主站换 logo 时在这里同步替换，并把 `viaai-nav.js` 里的 `LOGO_SRC` 的 `?v=` 加 1）。
+- 尺寸：左上角固定的 logo 桌面 200×40、手机 150×30，垂直中心与右上角栏对齐；深色模式用与主站相同的滤镜。管理后台等非固定位置的方形小 logo 只显示图标部分。
+- 链接指向主站（当前语言）。后台「图床Logo」（`logoUrl`）和「Logo跳转链接」（`logoLink`）配置因此不再生效：`renderLogo` 会把 Vue 改回去的 `src` / `href` 再改回来。
