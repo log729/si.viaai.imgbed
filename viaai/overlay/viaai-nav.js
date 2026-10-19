@@ -11,10 +11,14 @@
   var LABELS = {
     zh: { menu: "菜单", language: "语言", theme: "主题", home: "首页", digest: "资讯", oss: "开源", links: "导航", images: "图床", files: "文件", about: "关于", brand: "AI之路", open: "站群导航" },
     en: { menu: "Menu", language: "Language", theme: "Theme", home: "Home", digest: "Digest", oss: "Open Source", links: "Links", images: "Images", files: "Files", about: "About", brand: "AI Road", open: "Sites" },
+    hi: { menu: "मेन्यू", language: "भाषा", theme: "थीम", home: "होम", digest: "समाचार", oss: "ओपन सोर्स", links: "लिंक", images: "इमेज", files: "फ़ाइलें", about: "परिचय", brand: "AI Road", open: "साइटें" },
+    fr: { menu: "Menu", language: "Langue", theme: "Thème", home: "Accueil", digest: "Actualités", oss: "Open source", links: "Liens", images: "Images", files: "Fichiers", about: "À propos", brand: "AI Road", open: "Sites" },
+    pt: { menu: "Menu", language: "Idioma", theme: "Tema", home: "Início", digest: "Notícias", oss: "Open Source", links: "Links", images: "Imagens", files: "Arquivos", about: "Sobre", brand: "AI Road", open: "Sites" },
+    ru: { menu: "Меню", language: "Язык", theme: "Тема", home: "Главная", digest: "Новости", oss: "Open Source", links: "Ссылки", images: "Картинки", files: "Файлы", about: "О сайте", brand: "AI Road", open: "Сайты" },
     ja: { menu: "メニュー", language: "言語", theme: "テーマ", home: "ホーム", digest: "ニュース", oss: "オープンソース", links: "リンク集", images: "画像", files: "ファイル", about: "概要", brand: "AI Road", open: "サイト一覧" },
     es: { menu: "Menú", language: "Idioma", theme: "Tema", home: "Inicio", digest: "Noticias", oss: "Código abierto", links: "Enlaces", images: "Imágenes", files: "Archivos", about: "Acerca de", brand: "AI Road", open: "Sitios" },
   };
-  var NAMES = { zh: "中文", en: "English", ja: "日本語", es: "Español" };
+  var NAMES = { zh: "中文", en: "English", hi: "हिन्दी", es: "Español", fr: "Français", pt: "Português", ru: "Русский", ja: "日本語" };
   var V = window.__viaai;
   var SELF = "images";
   var root = document.documentElement;

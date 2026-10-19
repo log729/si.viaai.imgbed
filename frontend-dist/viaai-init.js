@@ -2,7 +2,7 @@
  * viaai.si 站群：把共享 cookie 的语言 / 主题同步给图床自身的设置。
  *
  * - 共享 cookie（Domain=.viaai.si，由主站等站点写入）：viaai_lang（zh|en|hi|es|fr|pt|ru|ja）、viaai_theme（light|dark）
- * - 图床目前有 zh / en / ja / es 四个语言版本（SUPPORTED）；cookie 里的其他语言（hi/fr/pt/ru）暂用英文
+ * - 图床与主站一样有 8 个语言版本（SUPPORTED）；cookie 里不在其中的语言用英文
  * - 语言只读：图床右上角的语言切换只改本站 localStorage，不写 viaai_lang
  * - 主题双向：用户在图床里切换主题时，写回 viaai_theme（写法与主站一致），其他站随之变化；
  *   页面加载 / 跟随系统 / 定时深色造成的变化不是用户操作，不写
@@ -11,8 +11,8 @@
  * 必须在应用脚本（defer）之前同步执行，由 scripts/patch-dist.mjs 以非 defer 方式注入 <head>。
  */
 (function () {
-  // 图床已有语言包的语言（viaai/locales/<code>.json）；zh / en 是应用自带的。cookie 里其余的语言一律用英文。
-  var SUPPORTED = ["zh", "en", "ja", "es"];
+  // 图床的界面语言（与主站一致的 8 种）：zh / en 是应用自带的，其余是 viaai/locales/<code>.json 语言包。不在列表里的语言用英文。
+  var SUPPORTED = ["zh", "en", "hi", "es", "fr", "pt", "ru", "ja"];
   function effective(c) {
     return SUPPORTED.indexOf(c) >= 0 ? c : c === "zh" ? "zh" : "en";
   }
@@ -47,7 +47,7 @@
     }
 
     // 语言：图床当前语言存在 localStorage["viaai-locale"]（zh | en | ja | es …）。
-    // 应用本身只认 localStorage["app-locale"]（zh-CN | en）；ja / es 等由 viaai-i18n.js 在应用启动后注入语言包再切换，
+    // 应用本身只认 localStorage["app-locale"]（zh-CN | en）；其余语言由 viaai-i18n.js 在应用启动后注入语言包再切换，
     // 所以这里先让应用以 zh-CN / en 启动（非中文的语言先用英文）。
     var cur = ls.getItem("viaai-locale");
     var lang = cookie(/(?:^|; )viaai_lang=([a-z]{2})/);
