@@ -10,7 +10,7 @@
 // --- 中间件（自动生成） ---
 import * as mw_api from '../../functions/api/_middleware.js';
 import * as mw_api_manage from '../../functions/api/manage/_middleware.js';
-import * as mw_dav from '../../functions/dav/_middleware.js';
+import * as mw_webdav from '../../functions/webdav/_middleware.js';
 import * as mw_file from '../../functions/file/_middleware.js';
 import * as mw_random from '../../functions/random/_middleware.js';
 import * as mw_upload from '../../functions/upload/_middleware.js';
@@ -64,7 +64,7 @@ import * as apiManageMoveCatchAll from '../../functions/api/manage/move/[[path]]
 import * as apiManageRenameCatchAll from '../../functions/api/manage/rename/[[path]].js';
 import * as apiManageTagsCatchAll from '../../functions/api/manage/tags/[[path]].js';
 import * as apiManageWhiteCatchAll from '../../functions/api/manage/white/[[path]].js';
-import * as davCatchAll from '../../functions/dav/[[path]].js';
+import * as webdavCatchAll from '../../functions/webdav/[[path]].js';
 import * as fileCatchAll from '../../functions/file/[[path]].js';
 
 
@@ -119,7 +119,7 @@ const routes = [
     { path: '/api/manage/rename/', module: apiManageRenameCatchAll, middlewares: [mw_api, mw_api_manage], catchAll: true },
     { path: '/api/manage/tags/', module: apiManageTagsCatchAll, middlewares: [mw_api, mw_api_manage], catchAll: true },
     { path: '/api/manage/white/', module: apiManageWhiteCatchAll, middlewares: [mw_api, mw_api_manage], catchAll: true },
-    { path: '/dav/', module: davCatchAll, middlewares: [mw_dav], catchAll: true },
+    { path: '/webdav/', module: webdavCatchAll, middlewares: [mw_webdav], catchAll: true },
     { path: '/file/', module: fileCatchAll, middlewares: [mw_file], catchAll: true },
 ];
 

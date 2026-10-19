@@ -6,18 +6,18 @@ import { createApiToken } from "../api/manage/apiTokens";
 export async function onRequest(context) {
     const { request, env } = context;
 
-    // WebDAV 规范：如果请求的是根目录 /dav 但没有斜杠，重定向到 /dav/，以保证客户端的 href 匹配
+    // WebDAV 规范：如果请求的是根目录 /webdav 但没有斜杠，重定向到 /webdav/，以保证客户端的 href 匹配
     const url = new URL(request.url);
-    if (url.pathname === '/dav') {
-        url.pathname = '/dav/';
+    if (url.pathname === '/webdav') {
+        url.pathname = '/webdav/';
         return Response.redirect(url.toString(), 301);
     }
 
     const authResponse = await checkAuth(request, env);
     if (authResponse) return authResponse;
 
-    // 从请求路径中替换第一个 /dav 部分
-    url.pathname = url.pathname.replace(/^\/dav/, '') || '/';
+    // 从请求路径中替换第一个 /webdav 部分
+    url.pathname = url.pathname.replace(/^\/webdav/, '') || '/';
     const modifiedRequest = new Request(url.toString(), request);
 
     switch (modifiedRequest.method) {
@@ -333,7 +333,7 @@ async function handleMove(request, env, context) {
     const cleanSource = sourcePath.startsWith('/') ? sourcePath.substring(1) : sourcePath;
 
     let destPath = decodeURIComponent(destinationUrl.pathname);
-    destPath = destPath.replace(/^\/dav/, '') || '/';
+    destPath = destPath.replace(/^\/webdav/, '') || '/';
     const cleanDest = destPath.startsWith('/') ? destPath.substring(1) : destPath;
 
     if (!cleanSource || !cleanDest) {
@@ -489,13 +489,13 @@ function generateDirectoryListingHtml(basePath, contents) {
     let dirLinks = '';
 
     for (const dir of contents.directories) {
-        const fullDirPath = `/dav/${dir}/`;
+        const fullDirPath = `/webdav/${dir}/`;
         const dirName = dir.split('/').pop();
         dirLinks += `<li><a href="${fullDirPath}"><strong>${dirName}/</strong></a></li>`;
     }
 
     for (const file of contents.files) {
-        const fullFilePath = `/dav/${file.name}`; 
+        const fullFilePath = `/webdav/${file.name}`; 
         const fileName = file.name.split('/').pop();
         const fileSize = file.metadata && file.metadata['FileSize'] 
             ? `${file.metadata['FileSize']} MB` 
@@ -506,7 +506,7 @@ function generateDirectoryListingHtml(basePath, contents) {
     let parentDirLink = '';
     if (basePath !== '/') {
         const parentPath = new URL('..', `http://dummy.com${basePath}`).pathname;
-        parentDirLink = `<li><a href="/dav${parentPath}"><strong>../ (Parent Directory)</strong></a></li>`;
+        parentDirLink = `<li><a href="/webdav${parentPath}"><strong>../ (Parent Directory)</strong></a></li>`;
     }
 
     return `<!DOCTYPE html><html><head><title>Index of ${basePath}</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{font-family:sans-serif;padding:20px}li{margin:5px 0}</style></head><body><h1>Index of ${basePath}</h1><ul>${parentDirLink}${dirLinks}${fileLinks}</ul></body></html>`;
@@ -514,14 +514,14 @@ function generateDirectoryListingHtml(basePath, contents) {
 
 function generateWebDAVXml(basePath, contents, depth) {
     let responses = '';
-    const prefixPath = basePath.startsWith('/dav/') ? basePath : `/dav${basePath.startsWith('/') ? '' : '/'}${basePath}`;
+    const prefixPath = basePath.startsWith('/webdav/') ? basePath : `/webdav${basePath.startsWith('/') ? '' : '/'}${basePath}`;
     const currentPath = prefixPath.endsWith('/') ? prefixPath : `${prefixPath}/`;
 
     responses += createCollectionXml(currentPath);
 
     if (depth !== '0') {
         for (const dir of contents.directories) {
-            const dirPath = dir.startsWith('dav/') ? `/${dir}/` : `/dav/${dir}/`;
+            const dirPath = dir.startsWith('webdav/') ? `/${dir}/` : `/webdav/${dir}/`;
             responses += createCollectionXml(dirPath);
         }
         for (const file of contents.files) {
@@ -556,5 +556,5 @@ function createFileXml(file) {
     const creationDate = fileTime.toISOString();
     const lastModified = fileTime.toUTCString();
     const contentType = file.metadata && file.metadata['FileType'] ? file.metadata['FileType'] : "application/octet-stream";
-    return `<D:response><D:href>${encodeURI(`/dav/${file.name}`)}</D:href><D:propstat><D:prop><D:displayname>${file.name.split('/').pop()}</D:displayname><D:resourcetype/><D:creationdate>${creationDate}</D:creationdate><D:getlastmodified>${lastModified}</D:getlastmodified><D:getcontentlength>${fileSize}</D:getcontentlength><D:getcontenttype>${contentType}</D:getcontenttype></D:prop><D:status>HTTP/1.1 200 OK</D:status></D:propstat></D:response>`;
+    return `<D:response><D:href>${encodeURI(`/webdav/${file.name}`)}</D:href><D:propstat><D:prop><D:displayname>${file.name.split('/').pop()}</D:displayname><D:resourcetype/><D:creationdate>${creationDate}</D:creationdate><D:getlastmodified>${lastModified}</D:getlastmodified><D:getcontentlength>${fileSize}</D:getcontentlength><D:getcontenttype>${contentType}</D:getcontenttype></D:prop><D:status>HTTP/1.1 200 OK</D:status></D:propstat></D:response>`;
 }
