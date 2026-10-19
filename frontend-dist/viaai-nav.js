@@ -197,11 +197,11 @@
   }
 
   // 下拉按钮：文字 + 小三角
-  function fillBtn(btn, text) {
+  function fillBtn(btn, text, aria) {
     btn.textContent = "";
     btn.appendChild(document.createTextNode(text + " "));
     var c = document.createElement("span"); c.className = "vn-caret"; c.textContent = "▾"; btn.appendChild(c);
-    btn.setAttribute("aria-label", text);
+    btn.setAttribute("aria-label", aria || text);
   }
 
   function build() {
@@ -294,7 +294,9 @@
       homeLink.href = items(l)[0][1];
       menu.btn.textContent = "▾";
       menu.btn.setAttribute("aria-label", t.menu);
-      fillBtn(langDd.btn, t.language);
+      // 与主站一致：按钮上直接显示当前语言自己的名字（中文 / English / 日本語 …），不写「语言」二字
+      fillBtn(langDd.btn, NAMES[l], t.language + ": " + NAMES[l]);
+      langDd.btn.lang = l;
       themeBtn.setAttribute("aria-label", t.theme);
       themeBtn.title = t.theme;
 
