@@ -60,6 +60,10 @@ jobs:
         if: steps.check.outputs.skip != 'true'
         run: npm ci --workspace=@cloudflare-imgbed/common --workspace=@cloudflare-imgbed/worker --omit=dev
 
+      - name: Apply viaai.si patches to frontend-dist
+        if: steps.check.outputs.skip != 'true'
+        run: node scripts/patch-dist.mjs
+
       - name: Generate worker routes
         if: steps.check.outputs.skip != 'true'
         run: node deploy/worker/generate-routes.js
