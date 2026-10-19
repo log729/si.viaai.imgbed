@@ -3,8 +3,8 @@
  * 不改动上游 Vue 打包产物：独立脚本，由 scripts/patch-dist.mjs 注入 index.html。
  * 菜单顺序与主站（viaai.si）一致：首页 · 资讯 · 开源 · 导航 · 图床 · 关于。
  * 登录页标题（“登录”）：去掉手写体，用普通字体；文字本身由 viaai-i18n.js 覆盖语言包（应用自带 zh-CN / en）和 viaai/locales/*.json 提供。
- * 上传页中间大标题（“图床名称 ImgHub”，.upload-home .header h1.title）隐藏。
- * Logo：换成主站同一张（viaai-logo.png，400×80，图标 + “AI之路”），桌面 200×40 / 手机 150×30，与右上角栏水平对齐，链接指向主站；深色模式用与主站相同的滤镜。
+ * 上传页中间大标题（“图床名称 ImgHub”，.upload-home .header h1.title）不显示但保留位置，logo 放在这里。
+ * Logo：换成主站同一张（viaai-logo.png，400×80，图标 + “AI之路”），链接指向图床首页；首页（上传页）放在上传框上方正中间（桌面 240×48 / 手机 180×36），其余页面在左上角（桌面 200×40 / 手机 150×30，与右上角栏水平对齐）；深色模式用与主站相同的滤镜。
  * 页脚：把上游的「© 年份 Designed by … for You!」换成「© 年份 AI之路 · viaai.si」（随语言变化，viaai.si 链到主站对应语言），并去掉右边的传送门（飞机）图标和链接。
  * 后台页面（/dashboard、/systemConfig、/customerConfig）：不显示本栏，用后台工具栏自带的主题按钮和中英文切换；后台语言用独立的 cookie imgbed_admin_lang（不与前端共用 viaai_lang），主题仍共用 viaai_theme。
  * 主题：本栏自己的主题按钮，样式与行为和其他站点一致（同一个半实心圆图标、浅/深二选一）；上游自带的主题按钮（浅/深/自动三态）隐藏。和「⋮」下拉里的语言切换项。
@@ -65,7 +65,7 @@
 
   var css =
     // 上游自带的主题按钮和「⋮」里的语言项由本栏代替
-    ".toggle-dark,.toggle-dark-button,html:not(.viaai-admin) .language-switcher,.upload-home .header h1.title,.page-footer .footer-name,.page-footer a:has(.footer-link-icon),.el-dropdown-menu__item:has(.language-switcher),.el-dropdown-menu__item:has(svg[data-icon=\"globe\"]),.viaai-hide{display:none!important}" +
+    ".toggle-dark,.toggle-dark-button,html:not(.viaai-admin) .language-switcher,.page-footer .footer-name,.page-footer a:has(.footer-link-icon),.el-dropdown-menu__item:has(.language-switcher),.el-dropdown-menu__item:has(svg[data-icon=\"globe\"]),.viaai-hide{display:none!important}" +
     // 被下移的上游固定定位元素：top = 原 top + --vn-shift（见 reflow）
     ".viaai-shift{top:calc(var(--vn-top) + var(--vn-shift))!important;translate:var(--vn-dx,0px) 0}" +
     // Logo：固定在左上角的那个（登录页 / 上传页）用主站的 5:1 长条 logo，垂直中心与右上角栏对齐；其余位置（如管理后台小 logo）的方形框只显示图标部分
@@ -73,6 +73,10 @@
     "img.logo:not(.logo--fixed){object-fit:cover;object-position:left center}" +
     "html.dark img.logo{filter:invert(1) hue-rotate(180deg) brightness(1.15) saturate(1.1)}" +
     "@media (max-width:768px){img.logo.logo--fixed{width:150px!important;height:30px!important;top:35px!important;left:16px!important}}" +
+    // 上传页中间的大标题不显示但保留它的位置（原来的版面间距不变），首页 logo 放在这个位置正中间
+    ".upload-home .header h1.title{visibility:hidden}" +
+    "html.viaai-home img.logo.logo--fixed{width:240px!important;height:48px!important;left:50%!important;top:100px!important;translate:-50% 0}" +
+    "@media (max-width:768px){html.viaai-home img.logo.logo--fixed{width:180px!important;height:36px!important;left:50%!important;top:118px!important}}" +
     // 登录页标题：去掉手写体（Pacifico），改用与表单其余文字相同的普通字体，字号收小
     ".login-title{font-family:Avenir,Helvetica,Arial,'PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif!important;font-size:1.75rem!important;font-weight:700!important;letter-spacing:1px!important;cursor:default!important}" +
     "@media (max-width:768px){.login-title{font-size:1.4rem!important}}" +
@@ -154,14 +158,15 @@
   // Logo：把上游 Logo 组件渲染的 <a.logo-link><img.logo></a> 的图片换成主站的 logo，链接指向主站（当前语言）。
   // Vue 在页面配置加载后可能把 src 改回后台配置的 logoUrl，所以监听 src / href 变化再改回来；幂等，没有 .logo 就什么都不做
   var LOGO_SRC = "/viaai-logo.png?v=1";
+  var LOGO_HREF = "https://imgbed.viaai.si/"; // 图床自己的首页
   function renderLogo() {
     var l = lang();
-    var home = items(l)[0][1];
     document.querySelectorAll("img.logo").forEach(function (img) {
       if (img.getAttribute("src") !== LOGO_SRC) img.setAttribute("src", LOGO_SRC);
       if (img.alt !== LABELS[l].brand) img.alt = LABELS[l].brand;
       var a = img.closest("a.logo-link");
-      if (a && a.getAttribute("href") !== home) a.setAttribute("href", home);
+      if (a && a.getAttribute("href") !== LOGO_HREF) a.setAttribute("href", LOGO_HREF);
+      if (a && a.getAttribute("target") !== "_self") a.setAttribute("target", "_self");
     });
   }
 

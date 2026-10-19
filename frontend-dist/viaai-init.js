@@ -74,7 +74,11 @@
   };
 
   // <html class="viaai-admin">：后台页面不显示站群导航栏，用后台自带的主题 / 语言切换（样式见 viaai-nav.js）
-  function syncAdminClass() { document.documentElement.classList.toggle("viaai-admin", isAdminPage()); }
+  // <html class="viaai-home">：首页（上传页，路径 /）logo 放到上传框上方正中间（样式见 viaai-nav.js）
+  function syncAdminClass() {
+    document.documentElement.classList.toggle("viaai-admin", isAdminPage());
+    document.documentElement.classList.toggle("viaai-home", location.pathname.replace(/\/+$/, "") === "");
+  }
   syncAdminClass();
   window.addEventListener("viaai-route", syncAdminClass);
 

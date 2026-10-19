@@ -47,8 +47,8 @@
 ## Logo
 
 - 用主站同一张图 `viaai/overlay/viaai-logo.png`（400×80，图标 + “AI之路”，来自 `si.viaai/public/logo.png`；主站换 logo 时在这里同步替换，并把 `viaai-nav.js` 里的 `LOGO_SRC` 的 `?v=` 加 1）。
-- 尺寸：左上角固定的 logo 桌面 200×40、手机 150×30，垂直中心与右上角栏对齐；深色模式用与主站相同的滤镜。管理后台等非固定位置的方形小 logo 只显示图标部分。
-- 链接指向主站（当前语言）。后台「图床Logo」（`logoUrl`）和「Logo跳转链接」（`logoLink`）配置因此不再生效：`renderLogo` 会把 Vue 改回去的 `src` / `href` 再改回来。
+- **首页（上传页，路径 `/`）**：logo 放在上传框上方正中间（`<html class="viaai-home">`，由 `viaai-init.js` 按路径设置），桌面 240×48、手机 180×36，位置就是原来大标题的位置（标题只是 `visibility:hidden`，保留版面间距）。其余页面（登录等）仍在左上角：桌面 200×40、手机 150×30，与右上角栏水平对齐。深色模式用与主站相同的滤镜。管理后台等非固定位置的方形小 logo 只显示图标部分。
+- **链接**：所有 logo 都指向图床首页 `https://imgbed.viaai.si/`（同一标签页打开）。后台「图床Logo」（`logoUrl`）和「Logo跳转链接」（`logoLink`）配置因此不再生效：`renderLogo` 会把 Vue 改回去的 `src` / `href` 再改回来。
 
 ## 上传页大标题
 
