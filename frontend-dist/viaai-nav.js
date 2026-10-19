@@ -14,7 +14,8 @@
   var SELF = "images";
   var root = document.documentElement;
 
-  // 语言跟随图床自身右上角的中/英切换：切换时应用写 localStorage["app-locale"] 并更新 <html lang>
+  // 菜单文字跟随图床当前显示的语言（zh/en）。显示语言由 viaai-init.js 按共享 cookie 同步；用户在图床右上角切换时
+  // 应用写 localStorage["app-locale"] 并更新 <html lang>。本脚本只读 cookie，不写。
   function lang() {
     var v = null;
     try { v = localStorage.getItem("app-locale"); } catch (e) {}
@@ -22,9 +23,17 @@
     return /^en/i.test(v) ? "en" : "zh";
   }
 
-  // 主站与资讯/开源/导航站按 <站点>/<lang> 区分语言，图床、文件站不分语言
+  // 主站与资讯/开源/导航站按 <站点>/<lang> 区分语言，图床、文件站不分语言。
+  // 图床只有中/英：共享 cookie viaai_lang（只读）是其他语言（如 ja）、且图床显示的正是它的回退语言（英文）时，
+  // 链接仍带 cookie 的语言，让用户去到其他站时保持原来的语言；用户在图床里手动换了语言则按图床显示的为准。
+  var SHARED = ["zh", "en", "hi", "es", "fr", "pt", "ru", "ja"];
+  function siteLang(l) {
+    var m = /(?:^|; )viaai_lang=([a-z]{2})/.exec(document.cookie);
+    var c = m && SHARED.indexOf(m[1]) >= 0 ? m[1] : null;
+    return c && (c === "zh" ? "zh" : "en") === l ? c : l;
+  }
   function items(l) {
-    var sfx = l === "zh" ? "" : "/en";
+    var sfx = siteLang(l) === "zh" ? "" : "/" + siteLang(l);
     return [
       ["home", "https://viaai.si" + sfx],
       ["digest", "https://digest.viaai.si" + sfx],
