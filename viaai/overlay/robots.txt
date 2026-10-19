@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /upload
-Disallow: /dav/
+Disallow: /webdav/
