@@ -5,8 +5,7 @@
  * 上传页中间大标题（“图床名称 ImgHub”，.upload-home .header h1.title）隐藏。
  * Logo：换成主站同一张（viaai-logo.png，400×80，图标 + “AI之路”），桌面 200×40 / 手机 150×30，与右上角栏水平对齐，链接指向主站；深色模式用与主站相同的滤镜。
  * 页脚：把上游的「© 年份 Designed by … for You!」换成「© 年份 AI之路 · viaai.si」（随语言变化，viaai.si 链到主站对应语言），并去掉右边的传送门（飞机）图标和链接。
- * 主题：页面上有上游自己的主题按钮（登录页 .toggle-dark、上传页桌面端 .toggle-dark-button，浅/深/自动三态）时，把它放进本栏的主题位置；
- * 没有可见的（如手机上传页）才用本栏自己的主题按钮（浅/深二选一）和「⋮」下拉里的语言切换项。
+ * 主题：本栏自己的主题按钮，样式与行为和其他站点一致（同一个半实心圆图标、浅/深二选一）；上游自带的主题按钮（浅/深/自动三态）隐藏。和「⋮」下拉里的语言切换项。
  */
 (function () {
   if (window.__viaaiNav) return;
@@ -59,12 +58,12 @@
     return root.classList.contains("dark");
   }
 
-  var MOON = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
-  var SUN = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g></svg>';
+  // 主题图标与其他站点一致：外圈 + 右半实心（浅 / 深都用同一个）
+  var THEME_ICON = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>';
 
   var css =
     // 上游自带的主题按钮和「⋮」里的语言项由本栏代替
-    ".language-switcher,.upload-home .header h1.title,.page-footer .footer-name,.page-footer a:has(.footer-link-icon),.el-dropdown-menu__item:has(.language-switcher),.el-dropdown-menu__item:has(svg[data-icon=\"globe\"]),.viaai-hide{display:none!important}" +
+    ".toggle-dark,.toggle-dark-button,.language-switcher,.upload-home .header h1.title,.page-footer .footer-name,.page-footer a:has(.footer-link-icon),.el-dropdown-menu__item:has(.language-switcher),.el-dropdown-menu__item:has(svg[data-icon=\"globe\"]),.viaai-hide{display:none!important}" +
     // 被下移的上游固定定位元素：top = 原 top + --vn-shift（见 reflow）
     ".viaai-shift{top:calc(var(--vn-top) + var(--vn-shift))!important;translate:var(--vn-dx,0px) 0}" +
     // Logo：固定在左上角的那个（登录页 / 上传页）用主站的 5:1 长条 logo，垂直中心与右上角栏对齐；其余位置（如管理后台小 logo）的方形框只显示图标部分
@@ -73,64 +72,35 @@
     "html.dark img.logo{filter:invert(1) hue-rotate(180deg) brightness(1.15) saturate(1.1)}" +
     "@media (max-width:768px){img.logo.logo--fixed{width:150px!important;height:30px!important;top:35px!important;left:16px!important}}" +
     ".viaai-footer{margin:0}.viaai-footer a{color:inherit;font-weight:700;text-decoration:none}.viaai-footer a:hover{text-decoration:underline}" +
-    ".viaai-bar{position:fixed;top:39px;right:30px;z-index:200;display:flex;gap:8px;font:14px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Noto Sans SC',sans-serif;--vn-bg:rgba(255,255,255,.55);--vn-solid:#fff;--vn-fg:#1f2937;--vn-bd:rgba(255,255,255,.7);--vn-hv:rgba(0,0,0,.06)}" +
+    ".viaai-bar{position:fixed;top:38px;right:30px;z-index:200;display:flex;gap:8px;font:14px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Noto Sans SC',sans-serif;--vn-bg:rgba(255,255,255,.55);--vn-solid:#fff;--vn-fg:#1f2937;--vn-bd:rgba(255,255,255,.7);--vn-hv:rgba(0,0,0,.06)}" +
     ".viaai-bar.dark{--vn-bg:rgba(30,30,30,.55);--vn-solid:#1f2937;--vn-fg:#f3f4f6;--vn-bd:rgba(255,255,255,.15);--vn-hv:rgba(255,255,255,.1)}" +
     ".viaai-bar *{box-sizing:border-box}" +
     ".viaai-dd{position:relative}" +
     ".viaai-bar .vn-btn{all:unset;cursor:pointer;display:flex;align-items:center;gap:5px;height:32px;padding:0 10px;border-radius:10px;background:var(--vn-bg);color:var(--vn-fg);border:1px solid var(--vn-bd);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);font-weight:600;white-space:nowrap;box-sizing:border-box}" +
     ".viaai-bar .vn-btn:hover{border-color:var(--vn-fg)}" +
     ".viaai-bar .vn-btn:focus-visible,.viaai-bar a:focus-visible{outline:2px solid #3b82f6;outline-offset:2px}" +
-    ".viaai-bar .vn-btn.vn-theme{padding:0;width:32px;justify-content:center}" +
-    // 页面上有上游自己的主题按钮时，把它放进本栏的主题位置，本栏自己的主题按钮只占位（不可见、不拦截点击）
-    ".viaai-bar{pointer-events:none}.viaai-bar .viaai-dd,.viaai-bar .vn-theme{pointer-events:auto}.viaai-bar .vn-theme.vn-slot{visibility:hidden;pointer-events:none}" +
-    ".viaai-theme{position:fixed!important;right:auto!important;bottom:auto!important;margin:0!important;z-index:201!important}" +
+    // 主题按钮：与其他站点（主站 .theme-btn）一致：34×34、1px 描边、8px 圆角、同一个半实心圆图标，悬停时描边和图标变主色；
+    // 图床背景是壁纸，所以底色用与栏内其他按钮相同的半透明玻璃
+    ".viaai-bar .vn-btn.vn-theme{width:34px;height:34px;padding:0;justify-content:center;border-radius:8px;border:1px solid var(--vn-line);color:var(--vn-navy)}" +
+    ".viaai-bar .vn-btn.vn-theme:hover{border-color:var(--vn-primary);color:var(--vn-primary)}" +
+    ".viaai-bar{--vn-line:#e1e8f2;--vn-navy:#0a1f44;--vn-primary:#1d7af3}.viaai-bar.dark{--vn-line:#25324a;--vn-navy:#e6edf7;--vn-primary:#4c97f6}" +
+    ".viaai-bar{pointer-events:none}.viaai-bar .viaai-dd,.viaai-bar .vn-theme{pointer-events:auto}" +
     ".viaai-bar .vn-caret{font-size:10px;opacity:.7}" +
     ".viaai-bar ul{display:none;list-style:none;margin:6px 0 0;padding:6px;position:absolute;right:0;top:100%;min-width:140px;background:var(--vn-solid);border:1px solid var(--vn-bd);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.2)}" +
     ".viaai-dd.open ul{display:block}" +
     ".viaai-bar li a{display:block;padding:7px 12px;border-radius:8px;color:var(--vn-fg);text-decoration:none;white-space:nowrap}" +
     ".viaai-bar li a:hover{background:var(--vn-hv)}" +
     ".viaai-bar li a[aria-current]{font-weight:700;color:#3b82f6}" +
-    "@media (max-width:768px){.viaai-bar{top:34px;right:12px;gap:6px}.viaai-bar .vn-btn{padding:0 8px}}" +
+    "@media (max-width:768px){.viaai-bar{top:33px;right:12px;gap:6px}.viaai-bar .vn-btn{padding:0 8px}}" +
     "@media print{.viaai-bar{display:none}}";
 
-  // 上游自己的主题按钮（上传页桌面端 .toggle-dark-button，登录等页 .toggle-dark）：放进本栏的主题位置。
-  // 按钮保持在 Vue 管理的原位置不动 DOM，只用 fixed 定位 + zoom 缩放到与本栏按钮同高，并盖在本栏占位按钮上
+  // 上游自己的主题按钮（上传页桌面端 .toggle-dark-button，登录等页 .toggle-dark，浅/深/自动三态）一律隐藏（见 css），
+  // 由本栏的主题按钮代替：样式和行为与其他站点一致（浅 / 深二选一，写回共享 cookie）
   var THEME_SEL = ".toggle-dark,.toggle-dark-button";
-  var placed = null;
-  function unplace() {
-    if (!placed) return;
-    placed.classList.remove("viaai-theme");
-    ["zoom", "left", "top"].forEach(function (k) { placed.style.removeProperty(k); });
-    placed = null;
-  }
-  function placeTheme(themeBtn) {
-    var app = document.getElementById("app");
-    // 只用真正可见的（上传页的 .toggle-dark-button 在手机上是 display:none，此时用本栏自己的主题按钮）
-    var t = null;
-    if (app) app.querySelectorAll(THEME_SEL).forEach(function (el) { if (!t && el.getClientRects().length) t = el; });
-    if (!t) { unplace(); themeBtn.classList.remove("vn-slot"); return; }
-    if (placed && placed !== t) unplace();
-    placed = t;
-    themeBtn.classList.add("vn-slot");
-    var slot = themeBtn.getBoundingClientRect();
-    t.classList.add("viaai-theme");
-    t.style.removeProperty("zoom");
-    var h = t.offsetHeight;
-    if (!h || !slot.height) return;
-    var z = slot.height / h;
-    t.style.setProperty("zoom", String(z), "important");
-    var left = slot.left / z, top = slot.top / z;
-    t.style.setProperty("left", left + "px", "important");
-    t.style.setProperty("top", top + "px", "important");
-    var r = t.getBoundingClientRect();
-    t.style.setProperty("left", (left + (slot.left - r.left) / z) + "px", "important");
-    t.style.setProperty("top", (top + (slot.top - r.top) / z) + "px", "important");
-  }
 
   // 原有的右上角按钮（固定定位、贴近顶部右半边）整体下移到本栏下面，本栏与左上角 logo 水平对齐
   var shifted = [];
-  function reflow(bar, themeBtn) {
-    placeTheme(themeBtn);
+  function reflow(bar) {
     shifted.forEach(function (el) { el.classList.remove("viaai-shift"); el.style.removeProperty("--vn-top"); el.style.removeProperty("--vn-dx"); });
     shifted = [];
     var barBottom = bar.getBoundingClientRect().bottom;
@@ -279,7 +249,7 @@
       renderLogo();
       bar.classList.toggle("dark", dark());
       var l = lang();
-      themeBtn.innerHTML = dark() ? SUN : MOON;
+      themeBtn.innerHTML = THEME_ICON;
       if (l === cur) { return; }
       cur = l;
       var t = LABELS[l];
@@ -292,7 +262,6 @@
       var c2 = document.createElement("span"); c2.className = "vn-caret"; c2.textContent = "▾"; langDd.btn.appendChild(c2);
       themeBtn.setAttribute("aria-label", t.theme);
       themeBtn.title = t.theme;
-      if (typeof schedule === "function") schedule(); // 栏宽随语言变化，主题位置跟着移动
 
       menu.ul.textContent = "";
       items(l).forEach(function (it) {
@@ -342,7 +311,7 @@
       });
     }).observe(document.body, { childList: true, subtree: true });
     var timer = null;
-    var schedule = function () { renderFooter(); renderLogo(); clearTimeout(timer); timer = setTimeout(function () { reflow(bar, themeBtn); }, 150); };
+    var schedule = function () { renderFooter(); renderLogo(); clearTimeout(timer); timer = setTimeout(function () { reflow(bar); }, 150); };
     var app = document.getElementById("app");
     if (app) new MutationObserver(schedule).observe(app, { childList: true, subtree: true, attributes: true, attributeFilter: ["src", "href"] });
     window.addEventListener("resize", schedule);
