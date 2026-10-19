@@ -3,7 +3,7 @@
  * 幂等，可重复运行：node scripts/patch-dist.mjs
  *
  * 1. frontend-dist/index.html：站群元数据（title/description/canonical/OG/图标/viaai-site）+ 注入 viaai-nav.js
- * 2. viaai/overlay/* 拷贝到 frontend-dist/（viaai-init.js、viaai-i18n.js、viaai-nav.js、robots.txt、favicon.ico、apple-touch-icon.png、og.png）
+ * 2. viaai/overlay/* 拷贝到 frontend-dist/（viaai-init.js、viaai-i18n.js、viaai-nav.js、viaai-logo.png、robots.txt、favicon.ico、apple-touch-icon.png、og.png）
  * 3. 重新生成 index.html.gz
  *
  * 不改上游压缩后的 JS（页脚 / 署名链接保持原样，符合 MIT 协议）。
@@ -47,7 +47,7 @@ const head = [
   '<script src="/viaai-init.js?v=5"></script>',
   // 在应用挂载后注册 hi / es / fr / pt / ru / ja 语言包；defer 脚本按顺序执行，须在 app 脚本之后
   '<script defer src="/viaai-i18n.js?v=3"></script>',
-  '<script defer src="/viaai-nav.js?v=12"></script>',
+  '<script defer src="/viaai-nav.js?v=13"></script>',
   END,
 ].join('');
 

@@ -2,6 +2,7 @@
  * viaai.si 站群统一导航栏：右上角一排「菜单▾ 语言▾ 主题」，与左上角 logo 水平对齐，原有的右上角按钮整体下移。
  * 不改动上游 Vue 打包产物：独立脚本，由 scripts/patch-dist.mjs 注入 index.html。
  * 菜单顺序与主站（viaai.si）一致：首页 · 资讯 · 开源 · 导航 · 图床 · 文件 · 关于。
+ * Logo：换成主站同一张（viaai-logo.png，400×80，图标 + “AI之路”），桌面 200×40 / 手机 150×30，与右上角栏水平对齐，链接指向主站；深色模式用与主站相同的滤镜。
  * 页脚：把上游的「© 年份 Designed by … for You!」换成「© 年份 AI之路 · viaai.si」（随语言变化，viaai.si 链到主站对应语言），并去掉右边的传送门（飞机）图标和链接。
  * 主题：页面上有上游自己的主题按钮（登录页 .toggle-dark、上传页桌面端 .toggle-dark-button，浅/深/自动三态）时，把它放进本栏的主题位置；
  * 没有可见的（如手机上传页）才用本栏自己的主题按钮（浅/深二选一）和「⋮」下拉里的语言切换项。
@@ -66,6 +67,11 @@
     ".language-switcher,.page-footer .footer-name,.page-footer a:has(.footer-link-icon),.el-dropdown-menu__item:has(.language-switcher),.el-dropdown-menu__item:has(svg[data-icon=\"globe\"]),.viaai-hide{display:none!important}" +
     // 被下移的上游固定定位元素：top = 原 top + --vn-shift（见 reflow）
     ".viaai-shift{top:calc(var(--vn-top) + var(--vn-shift))!important;translate:var(--vn-dx,0px) 0}" +
+    // Logo：固定在左上角的那个（登录页 / 上传页）用主站的 5:1 长条 logo，垂直中心与右上角栏对齐；其余位置（如管理后台小 logo）的方形框只显示图标部分
+    "img.logo.logo--fixed{width:200px!important;height:40px!important;object-fit:contain;border-radius:0!important;top:35px!important;left:20px!important}" +
+    "img.logo:not(.logo--fixed){object-fit:cover;object-position:left center}" +
+    "html.dark img.logo{filter:invert(1) hue-rotate(180deg) brightness(1.15) saturate(1.1)}" +
+    "@media (max-width:768px){img.logo.logo--fixed{width:150px!important;height:30px!important;top:35px!important;left:16px!important}}" +
     ".viaai-footer{margin:0}.viaai-footer a{color:inherit;font-weight:700;text-decoration:none}.viaai-footer a:hover{text-decoration:underline}" +
     ".viaai-bar{position:fixed;top:39px;right:30px;z-index:200;display:flex;gap:8px;font:14px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Noto Sans SC',sans-serif;--vn-bg:rgba(255,255,255,.55);--vn-solid:#fff;--vn-fg:#1f2937;--vn-bd:rgba(255,255,255,.7);--vn-hv:rgba(0,0,0,.06)}" +
     ".viaai-bar.dark{--vn-bg:rgba(30,30,30,.55);--vn-solid:#1f2937;--vn-fg:#f3f4f6;--vn-bd:rgba(255,255,255,.15);--vn-hv:rgba(255,255,255,.1)}" +
@@ -160,6 +166,20 @@
 
   // 页脚：上游 Footer.vue 渲染 <p>© 2024-2026 Designed by <a.footer-name>SanyueQi</a> for You! <a>传送门图标</a></p>。
   // 清空 <p> 直接子文本、隐藏 .footer-name（CSS），在传送门图标前插入自己的文案；幂等，上游页脚结构变了就什么都不做。
+  // Logo：把上游 Logo 组件渲染的 <a.logo-link><img.logo></a> 的图片换成主站的 logo，链接指向主站（当前语言）。
+  // Vue 在页面配置加载后可能把 src 改回后台配置的 logoUrl，所以监听 src / href 变化再改回来；幂等，没有 .logo 就什么都不做
+  var LOGO_SRC = "/viaai-logo.png?v=1";
+  function renderLogo() {
+    var l = lang();
+    var home = items(l)[0][1];
+    document.querySelectorAll("img.logo").forEach(function (img) {
+      if (img.getAttribute("src") !== LOGO_SRC) img.setAttribute("src", LOGO_SRC);
+      if (img.alt !== LABELS[l].brand) img.alt = LABELS[l].brand;
+      var a = img.closest("a.logo-link");
+      if (a && a.getAttribute("href") !== home) a.setAttribute("href", home);
+    });
+  }
+
   var footerKey = "";
   function renderFooter() {
     var p = document.querySelector(".page-footer p");
@@ -256,6 +276,7 @@
     var cur = "";
     function render() {
       renderFooter();
+      renderLogo();
       bar.classList.toggle("dark", dark());
       var l = lang();
       themeBtn.innerHTML = dark() ? SUN : MOON;
@@ -321,9 +342,9 @@
       });
     }).observe(document.body, { childList: true, subtree: true });
     var timer = null;
-    var schedule = function () { renderFooter(); clearTimeout(timer); timer = setTimeout(function () { reflow(bar, themeBtn); }, 150); };
+    var schedule = function () { renderFooter(); renderLogo(); clearTimeout(timer); timer = setTimeout(function () { reflow(bar, themeBtn); }, 150); };
     var app = document.getElementById("app");
-    if (app) new MutationObserver(schedule).observe(app, { childList: true, subtree: true });
+    if (app) new MutationObserver(schedule).observe(app, { childList: true, subtree: true, attributes: true, attributeFilter: ["src", "href"] });
     window.addEventListener("resize", schedule);
     schedule();
   }
