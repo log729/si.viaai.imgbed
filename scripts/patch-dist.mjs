@@ -3,12 +3,12 @@
  * 幂等，可重复运行：node scripts/patch-dist.mjs
  *
  * 1. frontend-dist/index.html：站群元数据（title/description/canonical/OG/图标/viaai-site）+ 注入 viaai-nav.js
- * 2. viaai/overlay/* 拷贝到 frontend-dist/（viaai-init.js、viaai-nav.js、robots.txt、favicon.ico、apple-touch-icon.png、og.png）
+ * 2. viaai/overlay/* 拷贝到 frontend-dist/（viaai-init.js、viaai-i18n.js、viaai-nav.js、robots.txt、favicon.ico、apple-touch-icon.png、og.png）
  * 3. 重新生成 index.html.gz
  *
  * 不改上游压缩后的 JS（页脚 / 署名链接保持原样，符合 MIT 协议）。
  */
-import { readFileSync, writeFileSync, copyFileSync, readdirSync } from 'fs';
+import { readFileSync, writeFileSync, copyFileSync, readdirSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { gzipSync } from 'zlib';
@@ -44,8 +44,10 @@ const head = [
   '<meta property="og:image:height" content="630">',
   '<meta name="twitter:card" content="summary_large_image">',
   // 同步共享 cookie 的语言 / 主题：非 defer，需在应用脚本（defer）之前执行
-  '<script src="/viaai-init.js?v=2"></script>',
-  '<script defer src="/viaai-nav.js?v=3"></script>',
+  '<script src="/viaai-init.js?v=3"></script>',
+  // 在应用挂载后注册 ja / es 等语言包；defer 脚本按顺序执行，须在 app 脚本之后
+  '<script defer src="/viaai-i18n.js?v=1"></script>',
+  '<script defer src="/viaai-nav.js?v=4"></script>',
   END,
 ].join('');
 
@@ -73,5 +75,10 @@ writeFileSync(indexPath, html);
 writeFileSync(`${indexPath}.gz`, gzipSync(Buffer.from(html), { level: 9 }));
 
 for (const f of readdirSync(OVERLAY)) copyFileSync(join(OVERLAY, f), join(DIST, f));
+
+// 界面语言包 viaai/locales/*.json → frontend-dist/viaai-locales/
+const LOCALES = join(ROOT, 'viaai', 'locales');
+mkdirSync(join(DIST, 'viaai-locales'), { recursive: true });
+for (const f of readdirSync(LOCALES)) copyFileSync(join(LOCALES, f), join(DIST, 'viaai-locales', f));
 
 console.log(`patched ${indexPath} (+ .gz), overlay: ${readdirSync(OVERLAY).join(', ')}`);
