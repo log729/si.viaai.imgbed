@@ -3,7 +3,8 @@
  * 不改动上游 Vue 打包产物：独立脚本，由 scripts/patch-dist.mjs 注入 index.html。
  * 菜单顺序与主站（viaai.si）一致：首页 · 资讯 · 开源 · 导航 · 图床 · 文件 · 关于。
  * 页脚：把上游的「© 年份 Designed by … for You!」换成「© 年份 AI之路 · viaai.si」（随语言变化，viaai.si 链到主站对应语言），保留右边的传送门图标。
- * 同时隐藏上游自带的主题按钮（由本栏的主题按钮代替，浅 / 深二选一）和「⋮」下拉里的语言切换项。
+ * 主题：页面上有上游自己的主题按钮（登录页 .toggle-dark、上传页桌面端 .toggle-dark-button，浅/深/自动三态）时，把它放进本栏的主题位置；
+ * 没有可见的（如手机上传页）才用本栏自己的主题按钮（浅/深二选一）和「⋮」下拉里的语言切换项。
  */
 (function () {
   if (window.__viaaiNav) return;
@@ -62,30 +63,68 @@
 
   var css =
     // 上游自带的主题按钮和「⋮」里的语言项由本栏代替
-    ".toggle-dark-button,.language-switcher,.page-footer .footer-name,.el-dropdown-menu__item:has(.language-switcher),.el-dropdown-menu__item:has(svg[data-icon=\"globe\"]),.viaai-hide{display:none!important}" +
+    ".language-switcher,.page-footer .footer-name,.el-dropdown-menu__item:has(.language-switcher),.el-dropdown-menu__item:has(svg[data-icon=\"globe\"]),.viaai-hide{display:none!important}" +
     // 被下移的上游固定定位元素：top = 原 top + --vn-shift（见 reflow）
     ".viaai-shift{top:calc(var(--vn-top) + var(--vn-shift))!important;translate:var(--vn-dx,0px) 0}" +
     ".viaai-footer{margin-right:.4em}.viaai-footer a{color:inherit;font-weight:700;text-decoration:none}.viaai-footer a:hover{text-decoration:underline}" +
-    ".viaai-bar{position:fixed;top:41px;right:30px;z-index:200;display:flex;gap:8px;font:14px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Noto Sans SC',sans-serif;--vn-bg:rgba(255,255,255,.55);--vn-solid:#fff;--vn-fg:#1f2937;--vn-bd:rgba(255,255,255,.7);--vn-hv:rgba(0,0,0,.06)}" +
+    ".viaai-bar{position:fixed;top:39px;right:30px;z-index:200;display:flex;gap:8px;font:14px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Noto Sans SC',sans-serif;--vn-bg:rgba(255,255,255,.55);--vn-solid:#fff;--vn-fg:#1f2937;--vn-bd:rgba(255,255,255,.7);--vn-hv:rgba(0,0,0,.06)}" +
     ".viaai-bar.dark{--vn-bg:rgba(30,30,30,.55);--vn-solid:#1f2937;--vn-fg:#f3f4f6;--vn-bd:rgba(255,255,255,.15);--vn-hv:rgba(255,255,255,.1)}" +
     ".viaai-bar *{box-sizing:border-box}" +
     ".viaai-dd{position:relative}" +
-    ".viaai-bar .vn-btn{all:unset;cursor:pointer;display:flex;align-items:center;gap:5px;height:28px;padding:0 10px;border-radius:10px;background:var(--vn-bg);color:var(--vn-fg);border:1px solid var(--vn-bd);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);font-weight:600;white-space:nowrap}" +
+    ".viaai-bar .vn-btn{all:unset;cursor:pointer;display:flex;align-items:center;gap:5px;height:32px;padding:0 10px;border-radius:10px;background:var(--vn-bg);color:var(--vn-fg);border:1px solid var(--vn-bd);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);font-weight:600;white-space:nowrap;box-sizing:border-box}" +
     ".viaai-bar .vn-btn:hover{border-color:var(--vn-fg)}" +
     ".viaai-bar .vn-btn:focus-visible,.viaai-bar a:focus-visible{outline:2px solid #3b82f6;outline-offset:2px}" +
-    ".viaai-bar .vn-theme{padding:0;width:28px;justify-content:center}" +
+    ".viaai-bar .vn-btn.vn-theme{padding:0;width:32px;justify-content:center}" +
+    // 页面上有上游自己的主题按钮时，把它放进本栏的主题位置，本栏自己的主题按钮只占位（不可见、不拦截点击）
+    ".viaai-bar{pointer-events:none}.viaai-bar .viaai-dd,.viaai-bar .vn-theme{pointer-events:auto}.viaai-bar .vn-theme.vn-slot{visibility:hidden;pointer-events:none}" +
+    ".viaai-theme{position:fixed!important;right:auto!important;bottom:auto!important;margin:0!important;z-index:201!important}" +
     ".viaai-bar .vn-caret{font-size:10px;opacity:.7}" +
     ".viaai-bar ul{display:none;list-style:none;margin:6px 0 0;padding:6px;position:absolute;right:0;top:100%;min-width:140px;background:var(--vn-solid);border:1px solid var(--vn-bd);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.2)}" +
     ".viaai-dd.open ul{display:block}" +
     ".viaai-bar li a{display:block;padding:7px 12px;border-radius:8px;color:var(--vn-fg);text-decoration:none;white-space:nowrap}" +
     ".viaai-bar li a:hover{background:var(--vn-hv)}" +
     ".viaai-bar li a[aria-current]{font-weight:700;color:#3b82f6}" +
-    "@media (max-width:768px){.viaai-bar{top:35px;right:12px;gap:6px}.viaai-bar .vn-btn{padding:0 8px}}" +
+    "@media (max-width:768px){.viaai-bar{top:34px;right:12px;gap:6px}.viaai-bar .vn-btn{padding:0 8px}}" +
     "@media print{.viaai-bar{display:none}}";
+
+  // 上游自己的主题按钮（上传页桌面端 .toggle-dark-button，登录等页 .toggle-dark）：放进本栏的主题位置。
+  // 按钮保持在 Vue 管理的原位置不动 DOM，只用 fixed 定位 + zoom 缩放到与本栏按钮同高，并盖在本栏占位按钮上
+  var THEME_SEL = ".toggle-dark,.toggle-dark-button";
+  var placed = null;
+  function unplace() {
+    if (!placed) return;
+    placed.classList.remove("viaai-theme");
+    ["zoom", "left", "top"].forEach(function (k) { placed.style.removeProperty(k); });
+    placed = null;
+  }
+  function placeTheme(themeBtn) {
+    var app = document.getElementById("app");
+    // 只用真正可见的（上传页的 .toggle-dark-button 在手机上是 display:none，此时用本栏自己的主题按钮）
+    var t = null;
+    if (app) app.querySelectorAll(THEME_SEL).forEach(function (el) { if (!t && el.getClientRects().length) t = el; });
+    if (!t) { unplace(); themeBtn.classList.remove("vn-slot"); return; }
+    if (placed && placed !== t) unplace();
+    placed = t;
+    themeBtn.classList.add("vn-slot");
+    var slot = themeBtn.getBoundingClientRect();
+    t.classList.add("viaai-theme");
+    t.style.removeProperty("zoom");
+    var h = t.offsetHeight;
+    if (!h || !slot.height) return;
+    var z = slot.height / h;
+    t.style.setProperty("zoom", String(z), "important");
+    var left = slot.left / z, top = slot.top / z;
+    t.style.setProperty("left", left + "px", "important");
+    t.style.setProperty("top", top + "px", "important");
+    var r = t.getBoundingClientRect();
+    t.style.setProperty("left", (left + (slot.left - r.left) / z) + "px", "important");
+    t.style.setProperty("top", (top + (slot.top - r.top) / z) + "px", "important");
+  }
 
   // 原有的右上角按钮（固定定位、贴近顶部右半边）整体下移到本栏下面，本栏与左上角 logo 水平对齐
   var shifted = [];
-  function reflow(bar) {
+  function reflow(bar, themeBtn) {
+    placeTheme(themeBtn);
     shifted.forEach(function (el) { el.classList.remove("viaai-shift"); el.style.removeProperty("--vn-top"); el.style.removeProperty("--vn-dx"); });
     shifted = [];
     var barBottom = bar.getBoundingClientRect().bottom;
@@ -94,7 +133,7 @@
     var cands = [];
     app.querySelectorAll("*").forEach(function (el) {
       var cs = getComputedStyle(el);
-      if (cs.position !== "fixed") return;
+      if (cs.position !== "fixed" || el.matches(THEME_SEL)) return;
       var r = el.getBoundingClientRect();
       if (!r.width || !r.height || r.width > 400 || r.top < 0 || r.top > 60 || r.left < window.innerWidth * 0.4) return;
       cands.push([el, r.top]);
@@ -230,6 +269,7 @@
       var c2 = document.createElement("span"); c2.className = "vn-caret"; c2.textContent = "▾"; langDd.btn.appendChild(c2);
       themeBtn.setAttribute("aria-label", t.theme);
       themeBtn.title = t.theme;
+      if (typeof schedule === "function") schedule(); // 栏宽随语言变化，主题位置跟着移动
 
       menu.ul.textContent = "";
       items(l).forEach(function (it) {
@@ -279,7 +319,7 @@
       });
     }).observe(document.body, { childList: true, subtree: true });
     var timer = null;
-    var schedule = function () { renderFooter(); clearTimeout(timer); timer = setTimeout(function () { reflow(bar); }, 150); };
+    var schedule = function () { renderFooter(); clearTimeout(timer); timer = setTimeout(function () { reflow(bar, themeBtn); }, 150); };
     var app = document.getElementById("app");
     if (app) new MutationObserver(schedule).observe(app, { childList: true, subtree: true });
     window.addEventListener("resize", schedule);
