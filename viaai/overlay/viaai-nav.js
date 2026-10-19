@@ -1,7 +1,7 @@
 /*
  * viaai.si 站群统一导航栏：右上角一排「菜单▾ 语言▾ 主题」，与左上角 logo 水平对齐，原有的右上角按钮整体下移。
  * 不改动上游 Vue 打包产物：独立脚本，由 scripts/patch-dist.mjs 注入 index.html。
- * 第一个按钮是「首页」（链接到主站首页，随语言），右边的小三角展开菜单：资讯 · 开源 · 导航 · 图床 · 关于（顺序与主站一致）。
+ * 第一个按钮是「首页」（链接到主站首页，随语言），右边的小三角展开菜单：首页 · 资讯 · 开源 · 导航 · 图床 · 关于（顺序与主站一致，菜单里也有首页）。
  * 登录页标题（“登录”）：去掉手写体，用普通字体；文字本身由 viaai-i18n.js 覆盖语言包（应用自带 zh-CN / en）和 viaai/locales/*.json 提供。
  * 上传页中间大标题（“图床名称 ImgHub”，.upload-home .header h1.title）不显示但保留位置，logo 放在这里。
  * Logo：换成主站同一张（viaai-logo.png，400×80，图标 + “AI之路”），链接指向图床首页；首页（上传页）放在上传框上方正中间（桌面 240×48 / 手机 180×36），其余页面在左上角（桌面 200×40 / 手机 150×30，与右上角栏水平对齐）；深色模式用与主站相同的滤镜。
@@ -300,7 +300,6 @@
 
       menu.ul.textContent = "";
       items(l).forEach(function (it) {
-        if (it[0] === "home") return; // 「首页」已经是栏上的链接
         var li = document.createElement("li");
         var a = document.createElement("a");
         a.href = it[1];
