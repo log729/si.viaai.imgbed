@@ -43,7 +43,7 @@ const head = [
   '<meta property="og:image:width" content="1200">',
   '<meta property="og:image:height" content="630">',
   '<meta name="twitter:card" content="summary_large_image">',
-  '<script defer src="/viaai-nav.js?v=1"></script>',
+  '<script defer src="/viaai-nav.js?v=2"></script>',
   END,
 ].join('');
 

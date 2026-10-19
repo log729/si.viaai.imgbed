@@ -6,7 +6,7 @@
 | 内容 | 位置 |
 |---|---|
 | 补丁脚本（index.html 元数据 / canonical / OG / 图标 / 注入导航，重新生成 .gz） | `scripts/patch-dist.mjs`，`npm run patch:dist` |
-| 站群统一导航（左下角悬浮胶囊，菜单与主站一致，8 种语言前缀） | `viaai/overlay/viaai-nav.js` |
+| 站群统一导航（左下角悬浮胶囊，菜单与主站一致，随图床右上角中/英切换） | `viaai/overlay/viaai-nav.js` |
 | robots.txt、favicon、apple-touch-icon、og.png | `viaai/overlay/` |
 | 部署时自动执行 | `.github/workflows/deploy-worker.yml` 的 "Apply viaai.si patches" 步骤 |
 

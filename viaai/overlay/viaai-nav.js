@@ -7,38 +7,38 @@
   if (window.__viaaiNav) return;
   window.__viaaiNav = true;
 
-  var LANGS = ["zh", "en", "hi", "es", "fr", "pt", "ru", "ja"];
   var LABELS = {
     zh: { home: "首页", digest: "资讯", oss: "开源", links: "导航", images: "图床", files: "文件", about: "关于", brand: "AI之路", open: "站群导航" },
     en: { home: "Home", digest: "Digest", oss: "Open Source", links: "Links", images: "Images", files: "Files", about: "About", brand: "AI Road", open: "Sites" },
   };
   var SELF = "images";
+  var root = document.documentElement;
 
+  // 语言跟随图床自身右上角的中/英切换：切换时应用写 localStorage["app-locale"] 并更新 <html lang>
   function lang() {
-    var m = /(?:^|; )lang=([a-z]{2})/.exec(document.cookie);
-    var l = m && m[1];
-    if (!l) l = (navigator.language || "zh").slice(0, 2).toLowerCase();
-    return LANGS.indexOf(l) >= 0 ? l : "zh";
+    var v = null;
+    try { v = localStorage.getItem("app-locale"); } catch (e) {}
+    if (!v) v = root.lang || "zh-CN";
+    return /^en/i.test(v) ? "en" : "zh";
   }
 
-  var l = lang();
-  var t = LABELS[l] || LABELS.en;
-  // 主站与资讯/开源/导航站支持 8 种语言（<站点>/<lang>），图床、文件站不分语言
-  var sfx = l === "zh" ? "" : "/" + l;
-  var items = [
-    ["home", "https://viaai.si" + sfx],
-    ["digest", "https://digest.viaai.si" + sfx],
-    ["oss", "https://soft.viaai.si" + sfx],
-    ["links", "https://nav.viaai.si" + sfx],
-    ["images", "https://imgbed.viaai.si"],
-    ["files", "https://file.logang.com"],
-    ["about", "https://viaai.si" + (l === "zh" ? "/about" : "/" + l + "/about")],
-  ];
+  // 主站与资讯/开源/导航站按 <站点>/<lang> 区分语言，图床、文件站不分语言
+  function items(l) {
+    var sfx = l === "zh" ? "" : "/en";
+    return [
+      ["home", "https://viaai.si" + sfx],
+      ["digest", "https://digest.viaai.si" + sfx],
+      ["oss", "https://soft.viaai.si" + sfx],
+      ["links", "https://nav.viaai.si" + sfx],
+      ["images", "https://imgbed.viaai.si"],
+      ["files", "https://file.logang.com"],
+      ["about", "https://viaai.si" + sfx + "/about"],
+    ];
+  }
 
+  // 深色模式跟随图床自身（<html class="dark">）
   function dark() {
-    var m = /(?:^|; )viaai_theme=(light|dark)/.exec(document.cookie);
-    if (m) return m[1] === "dark";
-    return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches;
+    return root.classList.contains("dark");
   }
 
   var css =
@@ -61,26 +61,36 @@
     document.head.appendChild(style);
 
     var box = document.createElement("nav");
-    box.className = "viaai-nav" + (dark() ? " dark" : "");
-    box.setAttribute("aria-label", t.open);
+    box.className = "viaai-nav";
 
     var btn = document.createElement("button");
     btn.type = "button";
     btn.setAttribute("aria-haspopup", "true");
     btn.setAttribute("aria-expanded", "false");
-    btn.textContent = t.brand + " ▴";
 
     var ul = document.createElement("ul");
-    items.forEach(function (it) {
-      var li = document.createElement("li");
-      var a = document.createElement("a");
-      a.href = it[1];
-      a.textContent = t[it[0]];
-      if (it[0] === SELF) a.setAttribute("aria-current", "page");
-      else if (it[0] !== "home") { a.target = "_blank"; a.rel = "noopener"; }
-      li.appendChild(a);
-      ul.appendChild(li);
-    });
+
+    var cur = "";
+    function render() {
+      box.classList.toggle("dark", dark());
+      var l = lang();
+      if (l === cur) return;
+      cur = l;
+      var t = LABELS[l];
+      box.setAttribute("aria-label", t.open);
+      btn.textContent = t.brand + " ▴";
+      ul.textContent = "";
+      items(l).forEach(function (it) {
+        var li = document.createElement("li");
+        var a = document.createElement("a");
+        a.href = it[1];
+        a.textContent = t[it[0]];
+        if (it[0] === SELF) a.setAttribute("aria-current", "page");
+        else if (it[0] !== "home") { a.target = "_blank"; a.rel = "noopener"; }
+        li.appendChild(a);
+        ul.appendChild(li);
+      });
+    }
 
     function set(open) {
       box.classList.toggle("open", open);
@@ -93,6 +103,11 @@
     box.appendChild(btn);
     box.appendChild(ul);
     document.body.appendChild(box);
+    render();
+
+    // 应用切换语言 / 深浅色时改的是 <html> 的 lang 与 class；另一个标签页切换时触发 storage 事件
+    new MutationObserver(render).observe(root, { attributes: true, attributeFilter: ["lang", "class"] });
+    window.addEventListener("storage", render);
   }
 
   if (document.body) build();
