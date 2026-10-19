@@ -18,7 +18,7 @@
 
   function load(code) {
     if (!packs[code]) {
-      packs[code] = fetch("/viaai-locales/" + code + ".json?v=2").then(function (r) {
+      packs[code] = fetch("/viaai-locales/" + code + ".json?v=3").then(function (r) {
         if (!r.ok) throw new Error(String(r.status));
         return r.json();
       });
@@ -59,11 +59,15 @@
     return null;
   }
 
+  // 应用自带的 zh-CN / en 里登录页标题是「登录到 {owner} 图床」/「Login to {owner} ImgHub」，站群里改成简单的「登录」/「Login」；
+  // 其余语言的语言包里已经是对应的「登录」。mergeLocaleMessage 只覆盖这一条
+  var OVERRIDES = { "zh-CN": { login: { title: "登录" } }, en: { login: { title: "Login" } } };
   function start() {
     var el = document.getElementById("app");
     var app = el && el.__vue_app__;
     i18n = app && findI18n(app);
     if (!i18n) return false;
+    Object.keys(OVERRIDES).forEach(function (l) { i18n.mergeLocaleMessage(l, OVERRIDES[l]); });
     apply();
     ready = true;
     return true;

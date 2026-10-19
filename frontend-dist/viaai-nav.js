@@ -2,6 +2,7 @@
  * viaai.si 站群统一导航栏：右上角一排「菜单▾ 语言▾ 主题」，与左上角 logo 水平对齐，原有的右上角按钮整体下移。
  * 不改动上游 Vue 打包产物：独立脚本，由 scripts/patch-dist.mjs 注入 index.html。
  * 菜单顺序与主站（viaai.si）一致：首页 · 资讯 · 开源 · 导航 · 图床 · 关于。
+ * 登录页标题（“登录”）：去掉手写体，用普通字体；文字本身由 viaai-i18n.js 覆盖语言包（应用自带 zh-CN / en）和 viaai/locales/*.json 提供。
  * 上传页中间大标题（“图床名称 ImgHub”，.upload-home .header h1.title）隐藏。
  * Logo：换成主站同一张（viaai-logo.png，400×80，图标 + “AI之路”），桌面 200×40 / 手机 150×30，与右上角栏水平对齐，链接指向主站；深色模式用与主站相同的滤镜。
  * 页脚：把上游的「© 年份 Designed by … for You!」换成「© 年份 AI之路 · viaai.si」（随语言变化，viaai.si 链到主站对应语言），并去掉右边的传送门（飞机）图标和链接。
@@ -71,6 +72,9 @@
     "img.logo:not(.logo--fixed){object-fit:cover;object-position:left center}" +
     "html.dark img.logo{filter:invert(1) hue-rotate(180deg) brightness(1.15) saturate(1.1)}" +
     "@media (max-width:768px){img.logo.logo--fixed{width:150px!important;height:30px!important;top:35px!important;left:16px!important}}" +
+    // 登录页标题：去掉手写体（Pacifico），改用与表单其余文字相同的普通字体，字号收小
+    ".login-title{font-family:Avenir,Helvetica,Arial,'PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif!important;font-size:1.75rem!important;font-weight:700!important;letter-spacing:1px!important;cursor:default!important}" +
+    "@media (max-width:768px){.login-title{font-size:1.4rem!important}}" +
     ".viaai-footer{margin:0}.viaai-footer a{color:inherit;font-weight:700;text-decoration:none}.viaai-footer a:hover{text-decoration:underline}" +
     ".viaai-bar{position:fixed;top:38px;right:30px;z-index:200;display:flex;gap:8px;font:14px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Noto Sans SC',sans-serif;--vn-bg:rgba(255,255,255,.55);--vn-solid:#fff;--vn-fg:#1f2937;--vn-bd:rgba(255,255,255,.7);--vn-hv:rgba(0,0,0,.06)}" +
     ".viaai-bar.dark{--vn-bg:rgba(30,30,30,.55);--vn-solid:#1f2937;--vn-fg:#f3f4f6;--vn-bd:rgba(255,255,255,.15);--vn-hv:rgba(255,255,255,.1)}" +
