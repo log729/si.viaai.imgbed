@@ -105,6 +105,9 @@
     ".viaai-bar .vn-btn.vn-theme:hover{border-color:var(--vn-primary);color:var(--vn-primary)}" +
     ".viaai-bar{--vn-line:#e1e8f2;--vn-navy:#0a1f44;--vn-primary:#1d7af3}.viaai-bar.dark{--vn-line:#25324a;--vn-navy:#e6edf7;--vn-primary:#4c97f6}" +
     ".viaai-bar{pointer-events:none}.viaai-bar .viaai-dd,.viaai-bar .vn-theme{pointer-events:auto}" +
+    // 登录状态（viaai-auth.js 插入的 .viaai-auth）：外观与栏内其他按钮一致
+    ".viaai-bar .viaai-auth{pointer-events:auto;margin-right:0;gap:8px}.viaai-bar .viaai-auth a,.viaai-bar .viaai-auth button{height:32px;border-radius:10px;background:var(--vn-bg);color:var(--vn-fg);border:1px solid var(--vn-bd);font-weight:600;backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4)}" +
+    ".viaai-bar .viaai-auth .va-out{border-color:var(--vn-bd);padding:0 10px}" +
     ".viaai-bar .vn-caret{font-size:10px;opacity:.7}" +
     ".viaai-bar .vn-split{display:flex}.viaai-bar .vn-split .vn-home{border-radius:10px 0 0 10px;border-right-width:0}" +
     ".viaai-bar .vn-split .vn-drop{border-radius:0 10px 10px 0;padding:0 8px;font-size:10px;opacity:1}" +
@@ -245,6 +248,7 @@
     themeBtn.type = "button";
     themeBtn.className = "vn-btn vn-theme";
     bar.appendChild(menu.wrap);
+    langDd.wrap.classList.add("lang-menu");
     bar.appendChild(langDd.wrap);
     bar.appendChild(themeBtn);
 
@@ -321,6 +325,7 @@
         a.href = "#";
         a.textContent = NAMES[code];
         a.lang = code;
+        a.dataset.lang = code; // 登录状态脚本（viaai-auth.js）靠 a[data-lang] 找到语言菜单，把「登录 / 用户名」放在它前面
         if (code === l) a.setAttribute("aria-current", "true");
         a.addEventListener("click", function (e) {
           e.preventDefault();
@@ -333,6 +338,11 @@
     }
 
     document.body.appendChild(bar);
+    // 统一通行证登录状态：与其他站点共用同一个脚本；此时语言菜单已在页面里，脚本能直接找到挂载位置
+    var auth = document.createElement("script");
+    auth.src = "/viaai-auth.js?v=1";
+    auth.defer = true;
+    document.head.appendChild(auth);
     render();
 
     // 应用切换语言 / 深浅色时改的是 <html> 的 lang 与 class；另一个标签页切换时触发 storage 事件
