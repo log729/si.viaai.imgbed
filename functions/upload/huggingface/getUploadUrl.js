@@ -12,7 +12,7 @@
 
 import { HuggingFaceAPI } from '../../utils/storage/huggingfaceAPI.js';
 import { fetchUploadConfig } from '../../utils/sysConfig.js';
-import { userAuthCheck, UnauthorizedResponse } from '../../utils/auth/userAuth.js';
+import { guardUpload } from '../../utils/auth/passportUpload.js';
 import { buildUniqueFileId, getUploadIp, isBlockedUploadIp, createResponse } from '../uploadTools.js';
 
 export async function onRequestPost(context) {
@@ -23,8 +23,10 @@ export async function onRequestPost(context) {
     try {
         // 鉴权
         const requiredPermission = 'upload';
-        if (!await userAuthCheck(env, url, request, requiredPermission)) {
-            return UnauthorizedResponse('Unauthorized');
+        // 通行证登录的上传者：Origin 校验 / 白名单 / 限流（getUploadUrl 算一次上传，其余不算）
+        const guard = await guardUpload({ env, url, request, requiredPermission, count: true });
+        if (guard.response) {
+            return guard.response;
         }
 
         // 检查上传IP是否被封禁

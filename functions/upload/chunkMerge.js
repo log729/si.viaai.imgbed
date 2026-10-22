@@ -1,6 +1,7 @@
 import { createS3Client } from '../utils/storage/s3Client.js';
 /* ========== 分块合并处理 ========== */
 import { createResponse, getUploadIp, getIPAddress, selectConsistentChannel, buildUniqueFileId, endUpload, sanitizeUploadFolder } from './uploadTools';
+import { withUploader } from '../utils/auth/passportUpload.js';
 import { retryFailedChunks, cleanupFailedMultipartUploads, checkChunkUploadStatuses, cleanupChunkData, cleanupUploadSession } from './chunkUpload';
 import { CompleteMultipartUploadCommand } from "@aws-sdk/client-s3";
 import { getDatabase } from '../utils/databaseAdapter.js';
@@ -173,6 +174,7 @@ async function handleChannelBasedMerge(context, uploadId, totalChunks, originalF
             Directory: normalizedFolder === '' ? '' : normalizedFolder + '/',
             Tags: []
         };
+        withUploader(metadata, context.uploader);
 
         // 收集所有已上传的分块信息
         const chunkStatuses = await checkChunkUploadStatuses(env, uploadId, totalChunks);

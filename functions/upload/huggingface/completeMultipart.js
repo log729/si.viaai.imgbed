@@ -1,4 +1,4 @@
-import { userAuthCheck, UnauthorizedResponse } from '../../utils/auth/userAuth.js';
+import { guardUpload } from '../../utils/auth/passportUpload.js';
 import { createResponse } from '../uploadTools.js';
 
 export async function onRequestPost(context) {
@@ -7,8 +7,10 @@ export async function onRequestPost(context) {
 
     try {
         const requiredPermission = 'upload';
-        if (!await userAuthCheck(env, url, request, requiredPermission)) {
-            return UnauthorizedResponse('Unauthorized');
+        // 通行证登录的上传者：Origin 校验 / 白名单 / 限流（getUploadUrl 算一次上传，其余不算）
+        const guard = await guardUpload({ env, url, request, requiredPermission, count: false });
+        if (guard.response) {
+            return guard.response;
         }
 
         const target = url.searchParams.get('target');

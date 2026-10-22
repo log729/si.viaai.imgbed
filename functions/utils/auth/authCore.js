@@ -8,6 +8,7 @@ import { validateApiToken } from './tokenValidator.js';
 import { getDatabase } from '../databaseAdapter.js';
 import { verifyPassword } from './passwordHash.js';
 import { validateSession } from './sessionManager.js';
+import { getPassportUser, passportLoginEnabled } from './passport.js';
 
 /**
  * 认证范围常量
@@ -21,7 +22,8 @@ export const AUTH_SCOPE = {
     EITHER: 'either',
 };
 
-const AUTHORIZED = (authType) => ({ authorized: true, authType });
+// extra 为可选附加字段（如通行证登录时的 userId / username），不影响原有调用方
+const AUTHORIZED = (authType, extra) => ({ authorized: true, authType, ...extra });
 const UNAUTHORIZED = { authorized: false, authType: null };
 
 /**
@@ -56,6 +58,25 @@ async function checkUser({ env, request, url, authCodeConfigured, userAuthCode }
     const adminSession = await validateSession(env, request, 'admin');
     if (adminSession.valid) {
         return AUTHORIZED('admin');
+    }
+
+    // viaai.si 站群：统一通行证登录（PASSPORT_LOGIN 默认开，=off 回到上游的访问码登录）
+    if (passportLoginEnabled(env)) {
+        const passportUser = await getPassportUser(request);
+        if (passportUser) {
+            return AUTHORIZED('user', { userId: passportUser.id, username: passportUser.username });
+        }
+
+        // 开启时不再有网页端访问码登录，也不再有「没配置访问码 = 放行」：
+        // 只剩老脚本 / PicGo 这类非浏览器客户端的访问码（URL 参数或 authCode 请求头）。
+        if (!authCodeConfigured || !url || isBrowserRequest(request)) {
+            return UNAUTHORIZED;
+        }
+        const code = extractAuthCode(url, request, { urlAndHeaderOnly: true });
+        if (code && await verifyPassword(code, userAuthCode)) {
+            return AUTHORIZED('user');
+        }
+        return UNAUTHORIZED;
     }
 
     // user session
@@ -136,10 +157,10 @@ export async function authenticate({
  * 从多个来源提取 authCode
  * 优先级：URL 参数 > Referer > 请求头 > Cookie
  */
-function extractAuthCode(url, request) {
+function extractAuthCode(url, request, { urlAndHeaderOnly = false } = {}) {
     let authCode = url.searchParams.get('authCode');
 
-    if (!authCode) {
+    if (!authCode && !urlAndHeaderOnly) {
         const referer = request.headers.get('Referer');
         if (referer) {
             try {
@@ -155,7 +176,7 @@ function extractAuthCode(url, request) {
         authCode = request.headers.get('authCode');
     }
 
-    if (!authCode) {
+    if (!authCode && !urlAndHeaderOnly) {
         const cookies = request.headers.get('Cookie');
         if (cookies) {
             const match = cookies.match(new RegExp('(^| )authCode=([^;]+)'));
@@ -164,4 +185,13 @@ function extractAuthCode(url, request) {
     }
 
     return authCode;
+}
+
+/**
+ * 是否浏览器发起的请求（带 Origin / Sec-Fetch-* 头）。
+ * 通行证登录开启后，网页端不能再用访问码；脚本 / PicGo 等非浏览器客户端不带这些头。
+ */
+function isBrowserRequest(request) {
+    const h = request.headers;
+    return h.has('Origin') || h.has('Sec-Fetch-Site') || h.has('Sec-Fetch-Mode');
 }
