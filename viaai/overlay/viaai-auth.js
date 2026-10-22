@@ -23,7 +23,9 @@
     st.textContent = '.viaai-auth{display:inline-flex;align-items:center;gap:4px;margin-right:8px;font-size:14px;white-space:nowrap;flex:none}' +
       '.viaai-auth a,.viaai-auth button{display:inline-flex;align-items:center;height:34px;padding:0 10px;border:1px solid rgba(127,127,127,.4);border-radius:8px;background:none;color:inherit;font:inherit;cursor:pointer;text-decoration:none}' +
       '.viaai-auth a:hover,.viaai-auth button:hover{border-color:currentColor}.viaai-auth .va-user{max-width:9em;overflow:hidden;text-overflow:ellipsis}' +
-      '.viaai-auth .va-out{border-color:transparent;padding:0 6px;opacity:.75}@media(max-width:640px){.viaai-auth{margin-right:4px}.viaai-auth .va-user{max-width:5em}}';
+      '.viaai-auth .va-out{border-color:transparent;padding:0 6px;opacity:.75}@media(max-width:640px){.viaai-auth{margin-right:4px}.viaai-auth .va-user{max-width:5em}}' +
+      // 手机宽度：页头放不下「用户名 + 退出」，只留用户名（点进账号页可退出），免得整页横向溢出
+      '@media(max-width:480px){.viaai-auth .va-out{display:none}.viaai-auth .va-user{max-width:4.5em;padding:0 8px}.viaai-auth .va-in{padding:0 8px}}';
     document.head.appendChild(st);
     var box = document.createElement('span');
     box.className = 'viaai-auth';
