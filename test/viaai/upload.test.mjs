@@ -161,3 +161,25 @@ test('parseAllowedUsers', () => {
     assert.equal(parseAllowedUsers({ UPLOAD_ALLOWED_USERS: ',' }), null);
     assert.deepEqual([...parseAllowedUsers({ UPLOAD_ALLOWED_USERS: 'a, b' })], ['a', 'b']);
 });
+
+test('生产白名单：只放 creative（u_PVE-YDKG1SRlgqlD）——creative 通过，其他注册用户 403 且不计数；admin / Token / 访问码不受影响', async () => {
+    const vars = { UPLOAD_ALLOWED_USERS: 'u_PVE-YDKG1SRlgqlD' };
+    let m = passportAs('u_PVE-YDKG1SRlgqlD');
+    try {
+        const env = makeEnv({ security: security(), vars });
+        assert.equal((await upload(env, { headers: PASS })).status, 400, 'creative 鉴权通过');
+        assert.equal(env.kv.writes, 1, 'creative 照常计数');
+    } finally { m.restore(); }
+    m = passportAs('u_rose');
+    try {
+        const env = makeEnv({ security: security(), vars });
+        const r = await upload(env, { headers: PASS });
+        assert.equal(r.status, 403);
+        const t = await r.text();
+        assert.match(t, /no upload permission/);
+        assert.match(t, /没有上传权限/);
+        assert.equal(env.kv.writes, 0);
+        assert.equal((await upload(env, { headers: { Authorization: 'Bearer tok-abc' } })).status, 400);
+        assert.equal((await upload(env, { query: '?initChunked=true&authCode=secret' })).status, 400);
+    } finally { m.restore(); }
+});

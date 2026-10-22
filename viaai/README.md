@@ -95,7 +95,15 @@
 - 记录上传者：成功写入的文件元数据多 `uploaderId` / `uploaderName`（现有字段不变；admin / Token / 访问码上传没有这两个字段）。
 - 白名单：环境变量 `UPLOAD_ALLOWED_USERS`（逗号分隔的通行证用户 id）；**设置了才限制**，不设置 = 所有已登录通行证用户都可上传。
 
-**前端（`viaai-login.js`）**：上游路由守卫调 `sessionCheck`，`userRequired` 且未登录就把路由推到 `/login`（输入访问码的用户登录页；管理员登录是另一条路由 `/adminLogin`，不动）。脚本在 `/login`（直接打开或单页应用 pushState 过来）先问 `sessionCheck`：`passportLogin:true` 且未登录 → `location.replace('https://id.viaai.si/<lang>/login?return=<图床首页>')`（中文无前缀，语言取 `viaai_lang`，没有就按页面语言）；已登录 → 回首页；后端没开通行证（回滚）→ 保留访问码登录页。页头的「登录 / 用户名 / 退出」仍是 `viaai-auth.js`；脚本包了一层 `fetch`，通行证统一退出成功后刷新页面，路由守卫重新检查，回到未登录。
+**前端（`viaai-login.js`，过渡页）**：上游路由守卫调 `sessionCheck`，`userRequired` 且未登录就把路由推到 `/login`（输入访问码的用户登录页；管理员登录是另一条路由 `/adminLogin`，不动）。匿名访客**不再被自动跳走**，而是看到一个过渡页：标题 + 一句话说明 +「登录后你可以：」5 条功能（拖拽 / 点击 / 粘贴批量上传并获得外链、粘贴外部图片链接转存、一键复制外链并选链接格式、上传前压缩 / 转 WebP 并选目录和命名、上传历史；都对应上游界面里真实存在的功能）+ 主按钮「登录」（`https://id.viaai.si/<lang>/login?return=<图床首页>`，中文无语言前缀）+ 次要链接「没有账号？注册」（`/register`，同样带 return）。用户点了才去通行证。
+- 过渡页盖在上游登录页（保留壁纸 / logo / 页脚）上，遮住访问码输入框；半透明底板 + 毛玻璃，跟随 `html.dark`（共享 cookie `viaai_theme`）；手机宽度（390px）不溢出；按钮 / 链接可键盘聚焦（`:focus-visible` 描边）。
+- 文案词典在 `viaai-login.js` 的 `TEXT`（8 种语言，非中日语言不含汉字，`test/viaai/gate.test.mjs` 校验 key 一致）；语言取 `viaai_lang`，其次页面 `lang`。语言切换时重绘。
+- 已登录且可上传：看到正常上传页（`/login` 则回首页）；`sessionCheck` 请求失败：`/login` 上仍显示过渡页（有登录按钮，不白屏）；后端没开通行证（`PASSPORT_LOGIN=off`）：什么都不做，保留访问码登录页。
+- **已登录但不在上传白名单**（`sessionCheck` 返回 `uploadAllowed:false`）：在上传页上盖一层模糊遮罩 +「当前账号没有上传权限（图床目前仅限站长使用）」+「返回主站」+「退出并换账号」（调通行证统一退出，成功后刷新），底下的上传界面设 `inert`。
+- 页头右上角的导航栏（`viaai-nav.js`）和 `viaai-auth.js` 的「登录 / 退出」保持原样（仍直接去通行证）。通行证统一退出成功后刷新页面，路由守卫重新检查。
+- SEO：首页的 title / description / OG 仍由 `patch-dist.mjs` 写在静态 HTML 里；过渡页文字是 overlay 脚本在浏览器里渲染的，**不在静态 HTML 里**，爬虫看不到（且匿名访问 `/` 会被前端路由推到 `/login`）。
+
+**上传白名单**：`UPLOAD_ALLOWED_USERS` 设置后只约束通行证登录这条途径（admin session、API Token、老访问码客户端不受影响）；不在名单的用户 `POST /upload` 返回 403（中英文说明，不计入限流），`sessionCheck` 返回 `valid:true, authType:'user', uploadAllowed:false`。在名单内或没设置变量时 `uploadAllowed:true`。生产设为 creative 的通行证 id（只放站长）；修改 / 关闭：改 Pages 环境变量 `UPLOAD_ALLOWED_USERS`，删除变量 = 恢复「所有登录用户可上传」。变量运行时读取，改完不用重新部署（新请求立即生效）。
 
 **回滚**：Pages 环境变量 `PASSPORT_LOGIN=off` 即可恢复访问码登录（`/api/auth/login`、`sessionCheck`、鉴权全部回到上游逻辑，登录页不再跳转）。
 

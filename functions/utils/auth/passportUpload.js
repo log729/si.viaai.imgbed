@@ -36,6 +36,12 @@ export function parseAllowedUsers(env) {
     return ids.length ? new Set(ids) : null;
 }
 
+/** 通行证用户是否在上传白名单内（没设置白名单 = 都可以） */
+export function isUploadAllowed(env, userId) {
+    const allowed = parseAllowedUsers(env);
+    return !allowed || allowed.has(userId);
+}
+
 export function isOriginAllowed(request) {
     const origin = request.headers.get('Origin');
     if (origin === null) return true; // 非浏览器请求：按其鉴权方式处理
@@ -93,9 +99,8 @@ export async function guardUpload({ env, url, request, requiredPermission = 'upl
     if (!isOriginAllowed(request)) {
         return { response: text('Forbidden: origin not allowed', 403) };
     }
-    const allowed = parseAllowedUsers(env);
-    if (allowed && !allowed.has(auth.userId)) {
-        return { response: text('Forbidden: your account is not allowed to upload. 当前账号未获准上传。', 403) };
+    if (!isUploadAllowed(env, auth.userId)) {
+        return { response: text('Forbidden: this account has no upload permission (the image host is currently limited to the site owner). 当前账号没有上传权限（图床目前仅限站长使用）。', 403) };
     }
     if (count) {
         const msg = await countUpload(env, auth.userId);

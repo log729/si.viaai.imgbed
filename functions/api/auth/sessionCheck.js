@@ -1,5 +1,6 @@
 import { validateAnySession, validateSession } from "../../utils/auth/sessionManager.js";
 import { getPassportUser, passportLoginEnabled } from "../../utils/auth/passport.js";
+import { isUploadAllowed } from "../../utils/auth/passportUpload.js";
 import { fetchSecurityConfig } from "../../utils/sysConfig.js";
 
 /**
@@ -36,13 +37,14 @@ export async function onRequestGet(context) {
         const admin = await validateSession(env, request, 'admin');
         if (admin.valid) {
             return new Response(JSON.stringify({
-                valid: true, authType: 'admin', adminRequired, userRequired: true, passportLogin: true,
+                valid: true, authType: 'admin', adminRequired, userRequired: true, passportLogin: true, uploadAllowed: true,
             }), { status: 200, headers });
         }
         const user = await getPassportUser(request);
         if (user) {
             return new Response(JSON.stringify({
                 valid: true, authType: 'user', adminRequired, userRequired: true, passportLogin: true,
+                uploadAllowed: isUploadAllowed(env, user.id),
                 passport: { id: user.id, username: user.username },
             }), { status: 200, headers });
         }
