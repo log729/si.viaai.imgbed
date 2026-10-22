@@ -46,10 +46,10 @@ const head = [
   // 同步共享 cookie 的语言 / 主题：非 defer，需在应用脚本（defer）之前执行
   '<script src="/viaai-init.js?v=8"></script>',
   // 用户登录页（访问码）→ 统一通行证登录；非 defer，尽早藏起访问码登录页
-  '<script src="/viaai-login.js?v=2"></script>',
+  '<script src="/viaai-login.js?v=3"></script>',
   // 在应用挂载后注册 hi / es / fr / pt / ru / ja 语言包；defer 脚本按顺序执行，须在 app 脚本之后
   '<script defer src="/viaai-i18n.js?v=5"></script>',
-  '<script defer src="/viaai-nav.js?v=28"></script>',
+  '<script defer src="/viaai-nav.js?v=29"></script>',
   END,
 ].join('');
 

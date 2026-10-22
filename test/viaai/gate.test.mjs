@@ -75,6 +75,6 @@ test('视图判定', () => {
 });
 
 test('文案占位符替换', () => {
-    assert.equal(G.fill(G.TEXT.en.dBody, { name: 'bob' }), 'The image host is currently limited to the site owner. Signed in as: bob');
+    assert.equal(G.fill(G.TEXT.en.dBody, { name: 'bob' }), 'Uploading is limited to whitelisted accounts. Signed in as: bob');
     assert.equal(G.fill('x {name} y', {}), 'x  y');
 });

@@ -28,7 +28,7 @@
       head: '登录后你可以：',
       feats: ['拖拽、点击或粘贴上传图片和文件，支持批量上传，获得稳定外链', '粘贴外部图片链接，一键转存到图床', '一键复制外链，可选择链接格式', '上传前自动压缩、转换为 WebP，并选择保存目录和命名方式', '查看上传历史，随时找回链接'],
       login: '登录', register: '没有账号？注册',
-      dTitle: '当前账号没有上传权限', dBody: '图床目前仅限站长使用。当前登录账号：{name}', dHint: '想换其他账号？先退出，再用其他账号登录。', dHome: '返回主站', dOut: '退出并换账号',
+      dTitle: '当前账号没有上传权限', dBody: '仅限白名单使用。当前登录账号：{name}', dHint: '想换其他账号？先退出，再用其他账号登录。', dHome: '返回主站', dOut: '退出并换账号',
     },
     en: {
       title: 'Sign in to use the image host',
@@ -36,7 +36,7 @@
       head: 'After signing in you can:',
       feats: ['Upload images and files by dragging, clicking or pasting, in batches, and get stable links', 'Paste external image links to save them to the host in one step', 'Copy links in one click, in the link format you choose', 'Compress and convert to WebP before upload, and pick the folder and file naming', 'Browse your upload history to find links again'],
       login: 'Log in', register: 'No account? Sign up',
-      dTitle: 'This account cannot upload', dBody: 'The image host is currently limited to the site owner. Signed in as: {name}', dHint: 'Want to use another account? Log out first, then sign in with it.', dHome: 'Back to viaai.si', dOut: 'Log out and switch account',
+      dTitle: 'This account cannot upload', dBody: 'Uploading is limited to whitelisted accounts. Signed in as: {name}', dHint: 'Want to use another account? Log out first, then sign in with it.', dHome: 'Back to viaai.si', dOut: 'Log out and switch account',
     },
     hi: {
       title: 'इमेज होस्टिंग इस्तेमाल करने के लिए लॉग इन करें',
@@ -44,7 +44,7 @@
       head: 'लॉग इन करने के बाद आप कर सकते हैं:',
       feats: ['खींचकर, क्लिक करके या पेस्ट करके तस्वीरें और फ़ाइलें एक साथ अपलोड करें और स्थायी लिंक पाएँ', 'बाहरी तस्वीरों के लिंक पेस्ट करके उन्हें होस्टिंग में सहेजें', 'एक क्लिक में लिंक कॉपी करें, अपनी पसंद के लिंक फ़ॉर्मैट में', 'अपलोड से पहले कंप्रेस और WebP में बदलें, और फ़ोल्डर व फ़ाइल नाम चुनें', 'अपलोड इतिहास देखकर लिंक दोबारा पाएँ'],
       login: 'लॉग इन', register: 'खाता नहीं है? साइन अप करें',
-      dTitle: 'इस खाते से अपलोड नहीं हो सकता', dBody: 'इमेज होस्टिंग अभी केवल साइट के मालिक के लिए है। इस खाते से लॉग इन: {name}', dHint: 'दूसरा खाता इस्तेमाल करना चाहते हैं? पहले लॉग आउट करें, फिर उस खाते से लॉग इन करें।', dHome: 'viaai.si पर वापस जाएँ', dOut: 'लॉग आउट करके खाता बदलें',
+      dTitle: 'इस खाते से अपलोड नहीं हो सकता', dBody: 'केवल व्हाइटलिस्ट वाले खातों के लिए। इस खाते से लॉग इन: {name}', dHint: 'दूसरा खाता इस्तेमाल करना चाहते हैं? पहले लॉग आउट करें, फिर उस खाते से लॉग इन करें।', dHome: 'viaai.si पर वापस जाएँ', dOut: 'लॉग आउट करके खाता बदलें',
     },
     es: {
       title: 'Inicia sesión para usar el alojamiento de imágenes',
@@ -52,7 +52,7 @@
       head: 'Al iniciar sesión podrás:',
       feats: ['Subir imágenes y archivos arrastrando, haciendo clic o pegando, en lote, y obtener enlaces estables', 'Pegar enlaces de imágenes externas para guardarlas en el alojamiento', 'Copiar enlaces con un clic, en el formato que elijas', 'Comprimir y convertir a WebP antes de subir, y elegir carpeta y nombre de archivo', 'Consultar tu historial de subidas para recuperar enlaces'],
       login: 'Iniciar sesión', register: '¿No tienes cuenta? Regístrate',
-      dTitle: 'Esta cuenta no puede subir archivos', dBody: 'Por ahora el alojamiento de imágenes es solo para el propietario del sitio. Sesión iniciada como: {name}', dHint: '¿Quieres usar otra cuenta? Cierra sesión primero y entra con la otra.', dHome: 'Volver a viaai.si', dOut: 'Cerrar sesión y cambiar de cuenta',
+      dTitle: 'Esta cuenta no puede subir archivos', dBody: 'Solo pueden subir archivos las cuentas de la lista blanca. Sesión iniciada como: {name}', dHint: '¿Quieres usar otra cuenta? Cierra sesión primero y entra con la otra.', dHome: 'Volver a viaai.si', dOut: 'Cerrar sesión y cambiar de cuenta',
     },
     fr: {
       title: "Connectez-vous pour utiliser l'hébergeur d'images",
@@ -60,7 +60,7 @@
       head: 'Une fois connecté, vous pourrez :',
       feats: ["Téléverser images et fichiers par glisser-déposer, clic ou collage, en lot, et obtenir des liens stables", "Coller des liens d'images externes pour les enregistrer sur l'hébergeur", 'Copier les liens en un clic, au format de votre choix', "Compresser et convertir en WebP avant l'envoi, et choisir le dossier et le nom des fichiers", "Consulter l'historique de vos envois pour retrouver vos liens"],
       login: 'Se connecter', register: 'Pas de compte ? Inscrivez-vous',
-      dTitle: 'Ce compte ne peut pas téléverser', dBody: "L'hébergeur d'images est actuellement réservé au propriétaire du site. Connecté en tant que : {name}", dHint: "Utiliser un autre compte ? Déconnectez-vous d'abord, puis reconnectez-vous avec l'autre.", dHome: 'Retour à viaai.si', dOut: 'Se déconnecter et changer de compte',
+      dTitle: 'Ce compte ne peut pas téléverser', dBody: "Réservé aux comptes de la liste blanche. Connecté en tant que : {name}", dHint: "Utiliser un autre compte ? Déconnectez-vous d'abord, puis reconnectez-vous avec l'autre.", dHome: 'Retour à viaai.si', dOut: 'Se déconnecter et changer de compte',
     },
     pt: {
       title: 'Entre para usar a hospedagem de imagens',
@@ -68,7 +68,7 @@
       head: 'Depois de entrar, você pode:',
       feats: ['Enviar imagens e arquivos arrastando, clicando ou colando, em lote, e obter links estáveis', 'Colar links de imagens externas para salvá-las na hospedagem', 'Copiar links com um clique, no formato que escolher', 'Comprimir e converter para WebP antes do envio, e escolher a pasta e o nome dos arquivos', 'Ver o histórico de envios para recuperar links'],
       login: 'Entrar', register: 'Não tem conta? Cadastre-se',
-      dTitle: 'Esta conta não pode enviar arquivos', dBody: 'No momento a hospedagem de imagens é restrita ao dono do site. Conectado como: {name}', dHint: 'Quer usar outra conta? Saia primeiro e entre com a outra.', dHome: 'Voltar ao viaai.si', dOut: 'Sair e trocar de conta',
+      dTitle: 'Esta conta não pode enviar arquivos', dBody: 'Uso restrito a contas da lista de permissões. Conectado como: {name}', dHint: 'Quer usar outra conta? Saia primeiro e entre com a outra.', dHome: 'Voltar ao viaai.si', dOut: 'Sair e trocar de conta',
     },
     ru: {
       title: 'Войдите, чтобы пользоваться хостингом изображений',
@@ -76,7 +76,7 @@
       head: 'После входа вы сможете:',
       feats: ['Загружать изображения и файлы перетаскиванием, щелчком или вставкой, пакетно, и получать постоянные ссылки', 'Вставлять ссылки на внешние изображения и сохранять их на хостинге', 'Копировать ссылки одним щелчком в выбранном формате', 'Сжимать и конвертировать в WebP перед загрузкой, выбирать папку и имена файлов', 'Просматривать историю загрузок и находить ссылки снова'],
       login: 'Войти', register: 'Нет аккаунта? Зарегистрируйтесь',
-      dTitle: 'Этот аккаунт не может загружать файлы', dBody: 'Сейчас хостинг изображений доступен только владельцу сайта. Вы вошли как: {name}', dHint: 'Хотите использовать другой аккаунт? Сначала выйдите, затем войдите под другим.', dHome: 'Вернуться на viaai.si', dOut: 'Выйти и сменить аккаунт',
+      dTitle: 'Этот аккаунт не может загружать файлы', dBody: 'Только для аккаунтов из белого списка. Вы вошли как: {name}', dHint: 'Хотите использовать другой аккаунт? Сначала выйдите, затем войдите под другим.', dHome: 'Вернуться на viaai.si', dOut: 'Выйти и сменить аккаунт',
     },
     ja: {
       title: 'ログインして画像ホスティングを使う',
@@ -84,7 +84,7 @@
       head: 'ログインすると次のことができます。',
       feats: ['ドラッグ、クリック、貼り付けで画像やファイルをまとめてアップロードし、安定したリンクを取得', '外部の画像リンクを貼り付けてホスティングに保存', 'ワンクリックでリンクをコピー（リンク形式を選べます）', 'アップロード前に圧縮や WebP 変換を行い、保存先フォルダとファイル名の付け方を選択', 'アップロード履歴からリンクを探し直す'],
       login: 'ログイン', register: 'アカウントをお持ちでない方は登録',
-      dTitle: 'このアカウントにはアップロード権限がありません', dBody: '画像ホスティングは現在サイト運営者のみ利用できます。ログイン中のアカウント: {name}', dHint: '別のアカウントを使うには、いったんログアウトしてからログインし直してください。', dHome: 'viaai.si に戻る', dOut: 'ログアウトしてアカウントを切り替える',
+      dTitle: 'このアカウントにはアップロード権限がありません', dBody: 'ホワイトリストに登録されたアカウントのみ利用できます。ログイン中のアカウント: {name}', dHint: '別のアカウントを使うには、いったんログアウトしてからログインし直してください。', dHome: 'viaai.si に戻る', dOut: 'ログアウトしてアカウントを切り替える',
     },
   };
 
