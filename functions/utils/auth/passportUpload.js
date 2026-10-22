@@ -43,7 +43,9 @@ export function isOriginAllowed(request) {
 }
 
 /**
- * 计数并检查限额。key：viaai@upload@<userId>@<UTC 日期>，一个 key 同时存日计数和分钟计数。
+ * 计数并检查限额。每个用户一个 key：manage@viaai@upload@<userId>，值 {day, d, m, mc}（UTC 日期、日计数、当前分钟、分钟计数），换天自动清零。
+ * 用 manage@ 前缀是因为图床的 D1 适配器把 manage@ 开头的键存进 settings 表（其余键会被当成文件记录写进 files 表，污染文件列表）；
+ * 每用户只有一行，不会随天数增长；KV 模式下另带 2 天 TTL。
  * 每次上传 1 次读 + 1 次写；超限（429）时只读不写。
  * 读后写不是原子的，并发请求可能少算几次，对防滥用够用。
  * @returns {Promise<string|null>} 超限返回说明文字，否则 null
@@ -52,14 +54,14 @@ export async function countUpload(env, userId, now = Date.now()) {
     const db = getDatabase(env);
     const day = new Date(now).toISOString().slice(0, 10).replace(/-/g, '');
     const minute = Math.floor(now / 60000);
-    const key = `viaai@upload@${userId}@${day}`;
+    const key = `manage@viaai@upload@${userId}`;
 
-    let rec = { d: 0, m: minute, mc: 0 };
+    let rec = { day, d: 0, m: minute, mc: 0 };
     try {
         const raw = await db.get(key);
         if (raw) {
             const p = JSON.parse(raw);
-            rec = { d: Number(p.d) || 0, m: Number(p.m) || 0, mc: Number(p.mc) || 0 };
+            if (p.day === day) rec = { day, d: Number(p.d) || 0, m: Number(p.m) || 0, mc: Number(p.mc) || 0 };
         }
     } catch { /* 计数损坏按 0 处理 */ }
     if (rec.m !== minute) { rec.m = minute; rec.mc = 0; }

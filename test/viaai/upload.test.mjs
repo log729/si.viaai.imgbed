@@ -81,13 +81,14 @@ test('限流：每天第 101 张 429；分钟计数过一分钟清零', async ()
     assert.equal(await countUpload(env, 'u_min', t0 + 60000), null);
 });
 
-test('每次计数的 KV 开销：1 读 1 写；key 形如 viaai@upload@<userId>@<日期>，带 TTL', async () => {
+test('每次计数的 KV 开销：1 读 1 写；key 为 manage@viaai@upload@<userId>（D1 下进 settings 表），带 TTL', async () => {
     const env = makeEnv({ security: {} });
     const r0 = env.kv.reads, w0 = env.kv.writes;
     await countUpload(env, 'u_cost', Date.UTC(2026, 9, 22, 8, 0, 0));
     assert.equal(env.kv.reads - r0, 1);
     assert.equal(env.kv.writes - w0, 1);
-    assert.ok(env.kv.m.has('viaai@upload@u_cost@20261022'));
+    assert.ok(env.kv.m.has('manage@viaai@upload@u_cost'));
+    assert.equal(JSON.parse(env.kv.m.get('manage@viaai@upload@u_cost')).day, '20261022');
     assert.ok(env.kv.lastOptions.expirationTtl >= 86400);
 });
 
