@@ -9,10 +9,12 @@
 | 站群统一导航栏（右上角一排「菜单▾ 语言▾ 主题」，与左上角 logo 水平对齐；菜单与主站一致） | `viaai/overlay/viaai-nav.js` |
 | 共享 cookie（`viaai_lang`、`viaai_theme`）↔ 图床语言 / 主题（可读可写） | `viaai/overlay/viaai-init.js` |
 | 界面语言包（hi / es / fr / pt / ru / ja，只覆盖上传页、登录页等用户可见文案）与注入脚本 | `viaai/locales/*.json`、`viaai/overlay/viaai-i18n.js` |
+| 用户登录页 → 统一通行证登录跳转、通行证退出后刷新 | `viaai/overlay/viaai-login.js` |
+| 通行证登录态 / 上传防滥用（后端） | `functions/utils/auth/passport.js`、`passportUpload.js`，挂钩点见下文 |
 | robots.txt、favicon、apple-touch-icon、og.png | `viaai/overlay/` |
 | 部署时自动执行 | `.github/workflows/deploy-worker.yml` 的 "Apply viaai.si patches" 步骤 |
 
-- 账号：保持独立（管理员账号在后台「安全设置」配置）。
+- 账号：管理员账号保持独立（后台「安全设置」配置）；网页端「用户登录」已改为统一通行证，见下文「统一通行证登录」。
 - 品牌文字（站点标题、Logo、页脚等）：在后台「页面设置」配置，不改代码。
 - 页脚 / 署名中的上游链接保留（MIT 协议）。
 - 上游同步后 `frontend-dist/` 会被覆盖，重新执行 `npm run patch:dist` 并提交即可（部署流程已自动执行）。
@@ -68,3 +70,33 @@
 ## 语言下拉
 
 与主站一致：按钮上直接显示当前语言自己的名字（中文 / English / 日本語 / Español / Français / Português / Русский / हिन्दी），不再写「语言」二字；下拉里列出各语言自己的名字，当前的高亮。（`aria-label` 仍是“语言: 当前语言名”。）
+
+## 统一通行证登录（替代网页端的访问码登录）
+
+图床网页端上传原来靠「用户访问码」（authCode）登录；现在改为 viaai.si 站群的统一通行证（`id.viaai.si`）。管理员登录与后台（`/dashboard`、`/api/manage/*`）、API Token、文件读取（`/file/*`、`/random`）、存储渠道**都没动**。
+
+**谁能上传（`PASSPORT_LOGIN` 开启时，默认）**：
+1. 管理员 session（`admin_session`）；
+2. API Token（`Authorization` 头，要有 `upload` 权限）；
+3. 通行证已登录（`viaai_sid` cookie，`Domain=.viaai.si`，会随请求发到本站）；
+4. 老脚本 / PicGo 等**非浏览器客户端**的访问码：URL 参数 `authCode` 或 `authCode` 请求头，且请求**不带** `Origin` / `Sec-Fetch-*`。浏览器来的访问码（Referer、Cookie 里的 authCode、带 Origin 的请求）不再有效。
+
+「没配置访问码 = 放行」在开启时**失效**：匿名永远 401（库里没配访问码也一样）。旧的 `user_session` cookie 也不再认（自然过期）。
+
+**后端**
+- `functions/utils/auth/passport.js`：`getPassportUser(request)`。没有 `viaai_sid` 不发请求；有就把 Cookie 头原样转发到 `https://id.viaai.si/api/v1/session`（1.8 秒超时）；超时 / 非 200 / 内容异常 / `user.id` 不符合 `u_xxx` → 匿名，不抛错；同一个请求只问一次。
+- `authCore.js` 的 `checkUser`：admin session 之后、旧的 user session / authCode 之前加通行证；返回值多了可选字段 `userId` / `username`。**ADMIN 范围不接受通行证**。
+- `POST /api/auth/login` 开启时 410（不再创建会话）；`GET /api/auth/sessionCheck` 开启时：通行证已登录 `{valid:true, authType:'user', userRequired:true, passportLogin:true, passport:{id,username}}`，未登录 `{valid:false, userRequired:true, passportLogin:true}`；`POST /api/auth/logout` 不变（只清本站 cookie，不替通行证退出）。
+- 上传入口（`/upload`、`/upload/huggingface/*`）用 `guardUpload`（`passportUpload.js`）替代 `userAuthCheck`。
+
+**防滥用（只针对通行证登录的上传；admin / Token / 访问码客户端不受影响）**
+- Origin 校验：请求带 `Origin` 时必须是 `https://imgbed.viaai.si`（`http://localhost|127.0.0.1[:端口]` 放行），否则 403；不带 Origin 的按其鉴权方式处理。
+- 限流：每用户每分钟最多 10 次上传请求、每天（UTC）最多 100 张，超限 429。非分块上传、分块上传的初始化、HuggingFace 的 getUploadUrl 各算一次；中间分块 / 合并 / 清理 / commit 不算。计数 key `viaai@upload@<userId>@<yyyymmdd>`，值 `{d,m,mc}`（日计数、当前分钟、分钟计数），TTL 2 天；**每次计数的上传 1 次读 + 1 次写**（429 时只读），读后写非原子，并发时可能少算。KV 免费版每天 1000 次写，所以全站通行证上传 ≤ 约 1000 次/天。
+- 记录上传者：成功写入的文件元数据多 `uploaderId` / `uploaderName`（现有字段不变；admin / Token / 访问码上传没有这两个字段）。
+- 白名单：环境变量 `UPLOAD_ALLOWED_USERS`（逗号分隔的通行证用户 id）；**设置了才限制**，不设置 = 所有已登录通行证用户都可上传。
+
+**前端（`viaai-login.js`）**：上游路由守卫调 `sessionCheck`，`userRequired` 且未登录就把路由推到 `/login`（输入访问码的用户登录页；管理员登录是另一条路由 `/adminLogin`，不动）。脚本在 `/login`（直接打开或单页应用 pushState 过来）先问 `sessionCheck`：`passportLogin:true` 且未登录 → `location.replace('https://id.viaai.si/<lang>/login?return=<图床首页>')`（中文无前缀，语言取 `viaai_lang`，没有就按页面语言）；已登录 → 回首页；后端没开通行证（回滚）→ 保留访问码登录页。页头的「登录 / 用户名 / 退出」仍是 `viaai-auth.js`；脚本包了一层 `fetch`，通行证统一退出成功后刷新页面，路由守卫重新检查，回到未登录。
+
+**回滚**：Pages 环境变量 `PASSPORT_LOGIN=off` 即可恢复访问码登录（`/api/auth/login`、`sessionCheck`、鉴权全部回到上游逻辑，登录页不再跳转）。
+
+**测试**：`npm run test:viaai`（node:test，不依赖服务和额外依赖；`test/viaai/hooks.mjs` 负责在没装依赖时解析 functions/ 里无扩展名的导入并桩掉 `@aws-sdk/*`）。

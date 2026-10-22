@@ -1,5 +1,5 @@
 import { createS3Client } from '../utils/storage/s3Client.js';
-import { userAuthCheck, UnauthorizedResponse } from "../utils/auth/userAuth";
+import { guardUpload, withUploader } from "../utils/auth/passportUpload.js";
 import { fetchUploadConfig, fetchSecurityConfig, fetchPageConfig } from "../utils/sysConfig";
 import {
     createResponse, getUploadIp, getIPAddress, resolveFileExt,
@@ -32,9 +32,14 @@ export async function onRequest(context) {  // Contents of context object
 
     // 鉴权
     const requiredPermission = 'upload';
-    if (!await userAuthCheck(env, url, request, requiredPermission)) {
-        return UnauthorizedResponse('Unauthorized');
+    // 分块上传的中间分块 / 合并 / 清理不单独计一次上传（初始化请求才计）
+    const isFollowUp = url.searchParams.get('cleanup') === 'true'
+        || (url.searchParams.get('chunked') === 'true' && url.searchParams.get('initChunked') !== 'true');
+    const guard = await guardUpload({ env, url, request, requiredPermission, count: !isFollowUp });
+    if (guard.response) {
+        return guard.response;
     }
+    context.uploader = guard.uploader; // 通行证登录上传时的上传者（id / name），否则 null
 
     // 获得上传IP
     const uploadIp = getUploadIp(request);
@@ -180,6 +185,7 @@ async function processFileUpload(context, formdata = null) {
         Directory: normalizedFolder === '' ? '' : normalizedFolder + '/',
         Tags: []
     };
+    withUploader(metadata, context.uploader);
 
     // 添加图片尺寸信息
     if (imageDimensions) {

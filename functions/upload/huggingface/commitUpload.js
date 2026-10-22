@@ -8,7 +8,7 @@ import { HuggingFaceAPI } from '../../utils/storage/huggingfaceAPI.js';
 import { fetchPageConfig, fetchUploadConfig } from '../../utils/sysConfig.js';
 import { getDatabase } from '../../utils/databaseAdapter.js';
 import { moderateContent, endUpload, getUploadIp, getIPAddress, sanitizeUploadFolder, createResponse } from '../uploadTools.js';
-import { userAuthCheck, UnauthorizedResponse } from '../../utils/auth/userAuth.js';
+import { guardUpload, withUploader } from '../../utils/auth/passportUpload.js';
 
 export async function onRequestPost(context) {
     const { request, env, waitUntil } = context;
@@ -17,8 +17,10 @@ export async function onRequestPost(context) {
     try {
         // 鉴权
         const requiredPermission = 'upload';
-        if (!await userAuthCheck(env, url, request, requiredPermission)) {
-            return UnauthorizedResponse('Unauthorized');
+        // 通行证登录的上传者：Origin 校验 / 白名单 / 限流（getUploadUrl 算一次上传，其余不算）
+        const guard = await guardUpload({ env, url, request, requiredPermission, count: false });
+        if (guard.response) {
+            return guard.response;
         }
 
         const body = await request.json();
@@ -111,6 +113,7 @@ export async function onRequestPost(context) {
             Directory: normalizedDirectory,
             Tags: []
         };
+        withUploader(metadata, guard.uploader);
 
         // 图像审查（公开仓库）
         if (!hfChannel.isPrivate) {
