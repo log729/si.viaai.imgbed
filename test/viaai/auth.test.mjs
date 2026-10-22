@@ -131,9 +131,21 @@ test('sessionCheck：通行证已登录 valid:true authType:user + passport', ()
     const r = await check(makeEnv({ security: sec() }), req('https://imgbed.viaai.si/api/auth/sessionCheck', PASS));
     assert.equal(r.status, 200);
     assert.deepEqual(r.body, {
-        valid: true, authType: 'user', adminRequired: true, userRequired: true, passportLogin: true,
+        valid: true, authType: 'user', adminRequired: true, userRequired: true, passportLogin: true, uploadAllowed: true,
         passport: { id: 'u_abc123', username: 'alice' },
     });
+}));
+
+test('sessionCheck：白名单——不在名单 uploadAllowed:false（仍 valid:true authType:user），在名单 / 没设置 true；admin 恒 true', () => withPassport({}, async () => {
+    const r = (env, h = PASS) => check(env, req('https://imgbed.viaai.si/api/auth/sessionCheck', h));
+    const no = await r(makeEnv({ security: sec(), vars: { UPLOAD_ALLOWED_USERS: 'u_PVE-YDKG1SRlgqlD' } }));
+    assert.equal(no.body.valid, true);
+    assert.equal(no.body.authType, 'user');
+    assert.equal(no.body.uploadAllowed, false);
+    assert.equal((await r(makeEnv({ security: sec(), vars: { UPLOAD_ALLOWED_USERS: 'u_abc123' } }))).body.uploadAllowed, true);
+    assert.equal((await r(makeEnv({ security: sec() }))).body.uploadAllowed, true);
+    const env = makeEnv({ security: sec(), vars: { UPLOAD_ALLOWED_USERS: 'u_PVE-YDKG1SRlgqlD' } });
+    assert.equal((await r(env, { Cookie: adminSession(env) + '; viaai_sid=tok' })).body.uploadAllowed, true);
 }));
 
 test('sessionCheck：admin session 仍返回 authType admin（通行证不能当管理员）', () => withPassport({}, async () => {
