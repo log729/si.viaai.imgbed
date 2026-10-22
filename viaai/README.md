@@ -99,7 +99,7 @@
 - 过渡页盖在上游登录页（保留壁纸 / logo / 页脚）上，遮住访问码输入框；半透明底板 + 毛玻璃，跟随 `html.dark`（共享 cookie `viaai_theme`）；手机宽度（390px）不溢出；按钮 / 链接可键盘聚焦（`:focus-visible` 描边）。
 - 文案词典在 `viaai-login.js` 的 `TEXT`（8 种语言，非中日语言不含汉字，`test/viaai/gate.test.mjs` 校验 key 一致）；语言取 `viaai_lang`，其次页面 `lang`。语言切换时重绘。
 - 已登录且可上传：看到正常上传页（`/login` 则回首页）；`sessionCheck` 请求失败：`/login` 上仍显示过渡页（有登录按钮，不白屏）；后端没开通行证（`PASSPORT_LOGIN=off`）：什么都不做，保留访问码登录页。
-- **已登录但不在上传白名单**（`sessionCheck` 返回 `uploadAllowed:false`）：在上传页上盖一层模糊遮罩 +「当前账号没有上传权限（图床目前仅限站长使用）」+「返回主站」+「退出并换账号」（调通行证统一退出，成功后刷新），底下的上传界面设 `inert`。
+- **已登录但不在上传白名单**（`sessionCheck` 返回 `uploadAllowed:false`）：在上传页上盖一层模糊遮罩 +「当前账号没有上传权限（仅限白名单使用）」+「返回主站」+「退出并换账号」（调通行证统一退出，成功后刷新），底下的上传界面设 `inert`。
 - 页头右上角的导航栏（`viaai-nav.js`）和 `viaai-auth.js` 的「登录 / 退出」保持原样（仍直接去通行证）。通行证统一退出成功后刷新页面，路由守卫重新检查。
 - SEO：首页的 title / description / OG 仍由 `patch-dist.mjs` 写在静态 HTML 里；过渡页文字是 overlay 脚本在浏览器里渲染的，**不在静态 HTML 里**，爬虫看不到（且匿名访问 `/` 会被前端路由推到 `/login`）。
 

@@ -11,9 +11,16 @@
     zh: ['登录', '退出', '我的账号'], en: ['Log in', 'Log out', 'My account'], hi: ['लॉग इन', 'लॉग आउट', 'मेरा खाता'], es: ['Iniciar sesión', 'Cerrar sesión', 'Mi cuenta'],
     fr: ['Connexion', 'Déconnexion', 'Mon compte'], pt: ['Entrar', 'Sair', 'Minha conta'], ru: ['Войти', 'Выйти', 'Мой аккаунт'], ja: ['ログイン', 'ログアウト', 'マイアカウント'],
   };
-  var lang = String(document.documentElement.lang || 'zh').slice(0, 2).toLowerCase();
-  if (!T[lang]) lang = 'zh';
-  var t = T[lang], prefix = lang === 'zh' ? '' : '/' + lang;
+  var t, prefix, rerender;
+  // 语言：优先页面自己的语言切换接口（图床这类单页应用切换语言时不刷新页面、也不改 <html lang>），否则取 <html lang>
+  function curLang() {
+    var v = window.__viaai, c = '';
+    try { c = v && typeof v.display === 'function' ? v.display() : ''; } catch (e) {}
+    c = String(c || document.documentElement.lang || 'zh').slice(0, 2).toLowerCase();
+    return T[c] ? c : 'zh';
+  }
+  function setLang() { var l = curLang(); t = T[l]; prefix = l === 'zh' ? '' : '/' + l; }
+  setLang();
 
   function init() {
     var a = document.querySelector('a[data-lang]');
@@ -33,7 +40,9 @@
     anchor.parentNode.insertBefore(box, anchor);
 
     function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
+    var shown;
     function render(me) {
+      shown = me;
       box.textContent = '';
       if (!me) {
         var l = el('a', 'va-in', t[0]);
@@ -56,11 +65,16 @@
       }
       box.hidden = false;
     }
+    rerender = function () { setLang(); if (shown !== undefined) render(shown); };
     if (!/(?:^|; )viaai_in=1/.test(document.cookie)) return render(null);
     fetch(ID + '/api/v1/session', { credentials: 'include' })
       .then(function (r) { return r.json(); })
       .then(function (j) { render(j && j.authenticated && j.user ? j.user.username : null); })
       .catch(function () { render(null); });
   }
+  // 语言切换后重画文字与链接前缀（页面按语言整页加载的站点不会触发，无影响）
+  function relang() { if (rerender) rerender(); }
+  window.addEventListener('viaai-lang', relang);
+  new MutationObserver(relang).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();

@@ -100,7 +100,7 @@ export async function guardUpload({ env, url, request, requiredPermission = 'upl
         return { response: text('Forbidden: origin not allowed', 403) };
     }
     if (!isUploadAllowed(env, auth.userId)) {
-        return { response: text('Forbidden: this account has no upload permission (the image host is currently limited to the site owner). 当前账号没有上传权限（图床目前仅限站长使用）。', 403) };
+        return { response: text('Forbidden: this account has no upload permission (whitelisted accounts only). 当前账号没有上传权限（仅限白名单使用）。', 403) };
     }
     if (count) {
         const msg = await countUpload(env, auth.userId);

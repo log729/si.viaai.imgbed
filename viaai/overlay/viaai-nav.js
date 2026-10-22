@@ -117,6 +117,8 @@
     ".viaai-bar li a:hover{background:var(--vn-hv)}" +
     ".viaai-bar li a[aria-current]{font-weight:700;color:#3b82f6}" +
     "@media (max-width:768px){.viaai-bar{top:33px;right:12px;gap:6px}.viaai-bar .vn-btn{padding:0 8px}}" +
+    // 手机宽度：一行放不下 logo（150px）和整条导航栏，导航栏移到最上面一行，左上角 logo 下移到它下面（首页居中的大 logo 本来就在下面）
+    "@media (max-width:480px){.viaai-bar{top:10px}img.logo.logo--fixed{top:56px!important}}" +
     "@media print{.viaai-bar{display:none}}";
 
   // 上游自己的主题按钮（上传页桌面端 .toggle-dark-button，登录等页 .toggle-dark，浅/深/自动三态）一律隐藏（见 css），
@@ -340,7 +342,7 @@
     document.body.appendChild(bar);
     // 统一通行证登录状态：与其他站点共用同一个脚本；此时语言菜单已在页面里，脚本能直接找到挂载位置
     var auth = document.createElement("script");
-    auth.src = "/viaai-auth.js?v=1";
+    auth.src = "/viaai-auth.js?v=2";
     auth.defer = true;
     document.head.appendChild(auth);
     render();
