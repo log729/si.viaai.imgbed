@@ -91,7 +91,7 @@
 
 **防滥用（只针对通行证登录的上传；admin / Token / 访问码客户端不受影响）**
 - Origin 校验：请求带 `Origin` 时必须是 `https://imgbed.viaai.si`（`http://localhost|127.0.0.1[:端口]` 放行），否则 403；不带 Origin 的按其鉴权方式处理。
-- 限流：每用户每分钟最多 10 次上传请求、每天（UTC）最多 100 张，超限 429。非分块上传、分块上传的初始化、HuggingFace 的 getUploadUrl 各算一次；中间分块 / 合并 / 清理 / commit 不算。计数 key `viaai@upload@<userId>@<yyyymmdd>`，值 `{d,m,mc}`（日计数、当前分钟、分钟计数），TTL 2 天；**每次计数的上传 1 次读 + 1 次写**（429 时只读），读后写非原子，并发时可能少算。KV 免费版每天 1000 次写，所以全站通行证上传 ≤ 约 1000 次/天。
+- 限流：每用户每分钟最多 10 次上传请求、每天（UTC）最多 100 张，超限 429。非分块上传、分块上传的初始化、HuggingFace 的 getUploadUrl 各算一次；中间分块 / 合并 / 清理 / commit 不算。计数 key `manage@viaai@upload@<userId>`（每用户一行；`manage@` 前缀让 D1 适配器存进 settings 表，不会混进文件列表），值 `{day,d,m,mc}`（UTC 日期、日计数、当前分钟、分钟计数，换天清零），KV 模式另带 2 天 TTL；**每次计数的上传 1 次读 + 1 次写**（429 时只读），读后写非原子，并发时可能少算。KV 免费版每天 1000 次写，所以全站通行证上传 ≤ 约 1000 次/天。
 - 记录上传者：成功写入的文件元数据多 `uploaderId` / `uploaderName`（现有字段不变；admin / Token / 访问码上传没有这两个字段）。
 - 白名单：环境变量 `UPLOAD_ALLOWED_USERS`（逗号分隔的通行证用户 id）；**设置了才限制**，不设置 = 所有已登录通行证用户都可上传。
 
