@@ -20,6 +20,7 @@ User-agent: MJ12bot
 User-agent: DotBot
 User-agent: DataForSeoBot
 User-agent: PetalBot
+User-agent: ElevenlabsCrawler
 Disallow: /
 
 User-agent: *
