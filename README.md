@@ -28,6 +28,11 @@
 
 # 1. 💡 Introduction
 
+## 技术开发
+
+架构、源码入口、本地开发、配置、数据与缓存边界、测试及发布流程见 [技术开发文档](docs/TECHNICAL_DEVELOPMENT.md)。
+
+
 CloudFlare ImgBed is a self-hosted image and file hosting solution for Docker and serverless environments, bringing **Telegram**, **Discord**, **Cloudflare R2**, **S3-compatible storage**, **Hugging Face**, **WebDAV**, and more into one management interface. It provides file management, authentication, directory organization, content moderation, a RESTful API, and WebDAV, with a growing range of personalized AI capabilities such as image tag recognition. It is suited to personal image hosting, website asset management, and lightweight file distribution. **[View all features →](https://cfbed.sanyue.de/en/guide/features.html)**
 
 ![CloudFlare](readme/海报.png)
