@@ -73,7 +73,7 @@
 
 ## 统一通行证登录（替代网页端的访问码登录）
 
-图床网页端上传原来靠「用户访问码」（authCode）登录；现在改为 viaai.si 站群的统一通行证（`id.viaai.si`）。管理员登录与后台（`/dashboard`、`/api/manage/*`）、API Token、文件读取（`/file/*`、`/random`）、存储渠道**都没动**。
+图床网页端上传原来靠「用户访问码」（authCode）登录；现在改为 viaai.si 站群的统一通行证（`id.viaai.si`）。管理员后台与 API Token 保留原有权限路径；个人文件管理、管理员密码要求和文件响应的安全边界见[技术文档](../docs/TECHNICAL_DEVELOPMENT.md#用户文件隔离与主动内容2026-11-安全修复)。
 
 **谁能上传（`PASSPORT_LOGIN` 开启时，默认）**：
 1. 管理员 session（`admin_session`）；
@@ -108,3 +108,7 @@
 **回滚**：Pages 环境变量 `PASSPORT_LOGIN=off` 即可恢复访问码登录（`/api/auth/login`、`sessionCheck`、鉴权全部回到上游逻辑，登录页不再跳转）。
 
 **测试**：`npm run test:viaai`（node:test，不依赖服务和额外依赖；`test/viaai/hooks.mjs` 负责在没装依赖时解析 functions/ 里无扩展名的导入并桩掉 `@aws-sdk/*`）。
+
+### 个人文件与遥测安全边界
+
+菜单的「我的文件」打开 `/my-files.html`，只管理当前通行证用户的文件，公开外链保留。无归属旧文件由管理员维护。分块上传和 HuggingFace 直传也绑定发起用户。HTML/SVG 等主动内容按附件下载并设置 sandbox；常见图片与音视频可直接预览。遥测默认关闭，启用需要运营者自己的 `SENTRY_DSN`，且只发送固定的耗时和状态字段；`disable_telemetry=true` 可强制关闭。详见[技术文档](../docs/TECHNICAL_DEVELOPMENT.md)。

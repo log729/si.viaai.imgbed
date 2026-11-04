@@ -1,116 +1,62 @@
-import sentryPlugin from "@cloudflare/pages-plugin-sentry";
-import '@sentry/tracing';
-import { fetchOthersConfig } from "./sysConfig";
+import { fetchOthersConfig } from './sysConfig.js';
 import { checkDatabaseConfig as checkDbConfig } from './databaseAdapter.js';
 
-let disableTelemetry = false;
+// Never hand the live Request, context, exceptions or environment to a telemetry SDK.
+// Only these fixed, non-user-controlled fields can leave this application.
+export function telemetryEvent(request, status, duration) {
+  const path = new URL(request.url).pathname;
+  const route = path.startsWith('/upload') ? 'upload' : path.startsWith('/api/manage/') ? 'manage' : 'other';
+  return {
+    event_id: crypto.randomUUID().replaceAll('-', ''),
+    timestamp: Date.now() / 1000,
+    platform: 'javascript',
+    level: status >= 500 ? 'error' : 'info',
+    message: 'Image host request completed',
+    tags: { route, method: ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS'].includes(request.method) ? request.method : 'OTHER', status: String(status) },
+    extra: { duration_ms: Math.max(0, Math.round(duration)) },
+  };
+}
+
+export function telemetryDestination(raw) {
+  try {
+    const u = new URL(raw);
+    const match = /^\/(?:.*\/)?(\d+)$/.exec(u.pathname);
+    if (u.protocol !== 'https:' || !u.username || u.password || u.search || u.hash || !match) return null;
+    const key = u.username;
+    u.username = '';
+    u.pathname = u.pathname.replace(/\/\d+$/, '/api/' + match[1] + '/envelope/');
+    return { url: u.href, key };
+  } catch { return null; }
+}
 
 export async function errorHandling(context) {
-  // 读取KV中的设置
-  const othersConfig = await fetchOthersConfig(context.env);
-  disableTelemetry = !othersConfig.telemetry.enabled;
-
-  const env = context.env;
-  if (!disableTelemetry) {
-    context.data.telemetry = true;
-    let remoteSampleRate = 0.001;
-    try {
-      const sampleRate = await fetchSampleRate(context)
-      //check if the sample rate is not null
-      if (sampleRate) {
-        remoteSampleRate = sampleRate;
-      }
-    } catch (e) { console.log(e) }
-    const sampleRate = env.sampleRate || remoteSampleRate;
-    return sentryPlugin({
-      dsn: "https://44b7b443108ec6d298044b125ff89d28@o4507644548022272.ingest.us.sentry.io/4507644555100160",
-      tracesSampleRate: sampleRate,
-    })(context);;
-  }
-
-  return context.next();
-}
-
-export async function telemetryData(context) {
-  // 读取KV中的设置
-  const othersConfig = await fetchOthersConfig(context.env);
-  disableTelemetry = !othersConfig.telemetry.enabled;
-  
-  if (!disableTelemetry) {
-    try {
-      const parsedHeaders = {};
-      context.request.headers.forEach((value, key) => {
-        parsedHeaders[key] = value
-        //check if the value is empty
-        if (value.length > 0) {
-          context.data.sentry.setTag(key, value);
-        }
-      });
-      const CF = JSON.parse(JSON.stringify(context.request.cf));
-      const parsedCF = {};
-      for (const key in CF) {
-        if (typeof CF[key] == "object") {
-          parsedCF[key] = JSON.stringify(CF[key]);
-        } else {
-          parsedCF[key] = CF[key];
-          if (CF[key].length > 0) {
-            context.data.sentry.setTag(key, CF[key]);
-          }
-        }
-      }
-      const data = {
-        headers: parsedHeaders,
-        cf: parsedCF,
-        url: context.request.url,
-        method: context.request.method,
-        redirect: context.request.redirect,
-      }
-      //get the url path
-      const urlPath = new URL(context.request.url).pathname;
-      const hostname = new URL(context.request.url).hostname;
-      context.data.sentry.setTag("path", urlPath);
-      context.data.sentry.setTag("url", data.url);
-      context.data.sentry.setTag("method", context.request.method);
-      context.data.sentry.setTag("redirect", context.request.redirect);
-      context.data.sentry.setContext("request", data);
-      const transaction = context.data.sentry.startTransaction({ name: `${context.request.method} ${hostname}` });
-      //add the transaction to the context
-      context.data.transaction = transaction;
-      return await context.next();
-    } catch (e) {
-      console.log(e);
-    } finally {
-      context.data.transaction.finish();
-    }
-  }
-
-  return context.next();
-}
-
-export async function traceData(context, span, op, name) {
-  const data = context.data
-  if (data.telemetry) {
-    if (span) {
-      console.log("span finish")
-      span.finish();
-    } else {
-      console.log("span start")
-      span = await context.data.transaction.startChild(
-        { op: op, name: name },
-      );
-    }
+  const config = await fetchOthersConfig(context.env);
+  const destination = config.telemetry?.enabled && context.env.disable_telemetry !== 'true'
+    ? telemetryDestination(context.env.SENTRY_DSN) : null;
+  if (!destination) return context.next();
+  const rate = Number(context.env.sampleRate ?? 0.001);
+  if (!Number.isFinite(rate) || rate < 0 || rate > 1 || Math.random() >= rate) return context.next();
+  const started = Date.now();
+  let status = 500;
+  try {
+    const response = await context.next();
+    status = response.status;
+    return response;
+  } finally {
+    const event = telemetryEvent(context.request, status, Date.now() - started);
+    const body = JSON.stringify({ event_id: event.event_id }) + '\n' + JSON.stringify({ type: 'event' }) + '\n' + JSON.stringify(event);
+    const task = fetch(destination.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-sentry-envelope', 'X-Sentry-Auth': 'Sentry sentry_version=7,sentry_key=' + destination.key },
+      body,
+    }).then(() => {}).catch(() => {});
+    context.waitUntil(task);
   }
 }
 
-async function fetchSampleRate(context) {
-  const data = context.data
-  if (data.telemetry) {
-    const url = "https://frozen-sentinel.pages.dev/signal/sampleRate.json";
-    const response = await fetch(url);
-    const json = await response.json();
-    return json.rate;
-  }
-}
+// Kept for compatibility with existing middleware chains; no credential capture.
+export async function telemetryData(context) { return context.next(); }
+export async function traceData() {}
 
 // 检查数据库是否配置
 export async function checkDatabaseConfig(context) {

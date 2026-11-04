@@ -175,7 +175,7 @@ routes.sort((a, b) => {
 });
 
 // 生成 import 语句
-let imports = '// --- 中间件（自动生成） ---\n';
+let imports = "import { secureFileResponse } from '../../functions/file/contentSecurity.js';\n// --- 中间件（自动生成） ---\n";
 for (const mw of middlewares) {
     imports += `import * as ${mw.varName} from '${mw.importPath}';\n`;
 }
@@ -363,15 +363,16 @@ async function maybeServeFromCache(request, ctx, producer) {
 
     const cache = caches.default;
     const cacheKey = createCacheKeyRequest(request);
+    const isFile = new URL(request.url).pathname.startsWith('/file/');
     const cachedResponse = await cache.match(cacheKey);
 
     if (cachedResponse) {
-        return request.method === 'HEAD'
-            ? responseFromHeadCache(cachedResponse)
-            : cachedResponse;
+        const safeResponse = isFile ? secureFileResponse(cachedResponse) : cachedResponse;
+        return request.method === 'HEAD' ? responseFromHeadCache(safeResponse) : safeResponse;
     }
 
-    const response = await producer();
+    const produced = await producer();
+    const response = isFile ? secureFileResponse(produced) : produced;
 
     // 按业务代码返回的 Cache-Control 决定是否写入 Worker Cache
     if (isCacheableResponse(request, response)) {

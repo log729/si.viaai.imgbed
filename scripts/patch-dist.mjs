@@ -49,7 +49,7 @@ const head = [
   '<script src="/viaai-login.js?v=3"></script>',
   // 在应用挂载后注册 hi / es / fr / pt / ru / ja 语言包；defer 脚本按顺序执行，须在 app 脚本之后
   '<script defer src="/viaai-i18n.js?v=5"></script>',
-  '<script defer src="/viaai-nav.js?v=29"></script>',
+  '<script defer src="/viaai-nav.js?v=30"></script>',
   END,
 ].join('');
 

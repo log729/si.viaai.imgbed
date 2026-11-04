@@ -77,7 +77,7 @@ export async function getOthersConfig(db, env) {
     // 远端遥测
     const kvTelemetry = settingsKV.telemetry || {}
     settings.telemetry = {
-        enabled: kvTelemetry.enabled ?? !(env.disable_telemetry === 'true'),
+        enabled: env.disable_telemetry !== 'true' && kvTelemetry.enabled === true && !!env.SENTRY_DSN,
         fixed: false,
     }
 

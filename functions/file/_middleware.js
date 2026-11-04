@@ -1,3 +1,5 @@
 import { checkDatabaseConfig } from '../utils/middleware';
 
-export const onRequest = [checkDatabaseConfig];
+import { fileContentSecurity } from './contentSecurity.js';
+
+export const onRequest = [fileContentSecurity, checkDatabaseConfig];

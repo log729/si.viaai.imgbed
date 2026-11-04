@@ -1,3 +1,4 @@
+import { readUploadTicket, notFound } from '../../utils/auth/fileOwnership.js';
 /**
  * HuggingFace 大文件提交 API
  * 
@@ -24,7 +25,12 @@ export async function onRequestPost(context) {
         }
 
         const body = await request.json();
-        const { fullId, filePath, sha256, fileSize, fileName, fileType, channelName } = body;
+        const ticket = await readUploadTicket(env, body.fullId, guard.uploader);
+        if (!ticket) return notFound();
+        if (['fullId', 'filePath', 'sha256', 'fileSize', 'channelName'].some(k => body[k] !== ticket[k])) return notFound();
+        const { fullId, filePath, sha256, fileSize, fileName, fileType, channelName } = ticket;
+        const existing = await getDatabase(env).getWithMetadata(fullId);
+        if (existing?.metadata) return createResponse('Upload already committed', { status: 409 });
 
         if (!fullId || !filePath || !sha256 || !fileSize) {
             return createResponse(JSON.stringify({
@@ -127,6 +133,7 @@ export async function onRequestPost(context) {
         // 写入数据库
         const db = getDatabase(env);
         await db.put(fullId, "", { metadata });
+        await db.delete('manage@viaai@hf@' + fullId);
 
         // 结束上传（更新索引等）
         const uploadContext = {

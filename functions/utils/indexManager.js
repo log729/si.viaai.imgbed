@@ -529,6 +529,8 @@ export async function readIndex(context, options = {}) {
         }
 
         let filteredFiles = index.files;
+        if (options.ownerId !== undefined) filteredFiles = filteredFiles.filter(file => file.metadata?.uploaderId === options.ownerId);
+        if (options.excludeOwned) filteredFiles = filteredFiles.filter(file => !file.metadata?.uploaderId);
 
         // 目录过滤
         if (directory) {
