@@ -35,7 +35,7 @@ const UNAUTHORIZED = { authorized: false, authType: null };
  */
 async function checkAdmin({ env, request, adminConfigured }) {
     if (!adminConfigured) {
-        return AUTHORIZED('admin'); // 未配置管理员认证，视为管理员身份放行
+        return null; // Fail closed: provision an administrator password first.
     }
 
     const session = await validateSession(env, request, 'admin');
@@ -53,10 +53,10 @@ async function checkAdmin({ env, request, adminConfigured }) {
  * @returns {Promise<{authorized: boolean, authType: string|null}|null>}
  *          认证通过/失败返回结果，无法判定返回 null
  */
-async function checkUser({ env, request, url, authCodeConfigured, userAuthCode }) {
+async function checkUser({ env, request, url, authCodeConfigured, userAuthCode, adminConfigured }) {
     // admin session（管理员身份也可访问用户资源）
     const adminSession = await validateSession(env, request, 'admin');
-    if (adminSession.valid) {
+    if (adminConfigured && adminSession.valid) {
         return AUTHORIZED('admin');
     }
 
@@ -120,11 +120,10 @@ export async function authenticate({
 }) {
     // 读取安全配置
     const securityConfig = await fetchSecurityConfig(env);
-    const adminUsername = securityConfig.auth.admin.adminUsername;
     const adminPassword = securityConfig.auth.admin.adminPassword;
     const userAuthCode = securityConfig.auth.user.authCode;
 
-    const adminConfigured = !!(adminUsername && adminUsername.trim()) || !!(adminPassword && adminPassword.trim());
+    const adminConfigured = !!(adminPassword && adminPassword.trim());
     const authCodeConfigured = !!(userAuthCode && userAuthCode.trim());
 
     // --- API Token 验证（公共层，所有 scope 通用） ---
@@ -136,7 +135,7 @@ export async function authenticate({
 
     // --- 会话/凭据验证 ---
     const adminCtx = { env, request, adminConfigured };
-    const userCtx = { env, request, url, authCodeConfigured, userAuthCode };
+    const userCtx = { env, request, url, authCodeConfigured, userAuthCode, adminConfigured };
 
     if (authScope === AUTH_SCOPE.ADMIN) {
         return (await checkAdmin(adminCtx)) || UNAUTHORIZED;

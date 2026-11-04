@@ -1,3 +1,4 @@
+import { getDatabase } from '../../utils/databaseAdapter.js';
 /**
  * HuggingFace 大文件直传 API
  *
@@ -29,6 +30,8 @@ export async function onRequestPost(context) {
             return guard.response;
         }
 
+        context.uploader = guard.uploader;
+
         // 检查上传IP是否被封禁
         const uploadIp = getUploadIp(request);
         if (await isBlockedUploadIp(env, uploadIp)) {
@@ -42,7 +45,7 @@ export async function onRequestPost(context) {
         const { fileSize, fileName, fileType, sha256, fileSample, channelName, uploadNameType, uploadFolder } = body;
         const normalizedFileType = fileType || 'application/octet-stream';
 
-        if (!fileSize || !fileName || !sha256 || !fileSample) {
+        if (!Number.isSafeInteger(fileSize) || fileSize <= 0 || typeof fileName !== 'string' || !fileName || fileName.length > 255 || !/^[a-fA-F0-9]{64}$/.test(sha256 || '') || typeof fileSample !== 'string' || !fileSample || fileSample.length > 2048) {
             return createResponse(JSON.stringify({
                 error: 'Missing required fields: fileSize, fileName, sha256, fileSample'
             }), {
@@ -101,7 +104,15 @@ export async function onRequestPost(context) {
         // 获取 LFS 上传信息
         const huggingfaceAPI = new HuggingFaceAPI(hfChannel.token, hfChannel.repo, hfChannel.isPrivate || false);
         const uploadInfo = await huggingfaceAPI.getLfsUploadInfo(fileSize, filePath, sha256, fileSample);
-        rewriteMultipartCompletionUrl(url, uploadInfo);
+        const ticketId = crypto.randomUUID();
+        const completionTarget = uploadInfo?.uploadAction?.header?.chunk_size ? uploadInfo.uploadAction.href : null;
+        const ticket = {
+            ticketId, ownerId: guard.uploader?.id || null, fullId, filePath, channelName: hfChannel.name,
+            sha256, fileSize, fileName, fileType: normalizedFileType, completionTarget,
+            expiresAt: Date.now() + 3600000,
+        };
+        await getDatabase(env).put('manage@viaai@hf@' + fullId, JSON.stringify(ticket), { expirationTtl: 3600 });
+        rewriteMultipartCompletionUrl(url, uploadInfo, fullId, ticketId);
 
         // 返回上传信息
         return createResponse(JSON.stringify({
@@ -126,12 +137,12 @@ export async function onRequestPost(context) {
     }
 }
 
-function rewriteMultipartCompletionUrl(requestUrl, uploadInfo) {
+function rewriteMultipartCompletionUrl(requestUrl, uploadInfo, fullId, ticketId) {
     const uploadAction = uploadInfo?.uploadAction;
     if (!uploadAction?.header?.chunk_size || !uploadAction.href) {
         return;
     }
 
     const originalCompletionUrl = uploadAction.href;
-    uploadAction.href = `${requestUrl.origin}/upload/huggingface/completeMultipart?target=${encodeURIComponent(originalCompletionUrl)}`;
+    uploadAction.href = `${requestUrl.origin}/upload/huggingface/completeMultipart?target=${encodeURIComponent(originalCompletionUrl)}&fullId=${encodeURIComponent(fullId)}&ticket=${encodeURIComponent(ticketId)}`;
 }

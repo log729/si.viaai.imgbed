@@ -62,7 +62,7 @@ function isAllowedDirectory(dir, allowedDirs) {
 async function getPublicFileList(context, url, dir, recursive) {
     // 构建缓存键（目录格式去掉末尾的/，与清除缓存时的格式一致）
     const cacheDir = dir.replace(/\/$/, '');
-    const cacheKey = `${url.origin}/api/publicFileList?dir=${cacheDir}&recursive=${recursive}`;
+    const cacheKey = `${url.origin}/api/publicFileList-v2?dir=${cacheDir}&recursive=${recursive}`;
 
     // 检查缓存中是否有记录
     const cache = caches.default;
@@ -79,7 +79,7 @@ async function getPublicFileList(context, url, dir, recursive) {
         start: 0,
         count: -1,
         includeSubdirFiles: recursive,
-        accessStatus: 'normal', // 只返回正常可访问的内容
+        excludeOwned: true, accessStatus: 'normal', // 只返回正常可访问的内容
     });
 
     if (!result.success) {

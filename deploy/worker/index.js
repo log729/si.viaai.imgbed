@@ -7,13 +7,14 @@
 
 // ==================== 自动生成的导入 ====================
 
+import { secureFileResponse } from '../../functions/file/contentSecurity.js';
 // --- 中间件（自动生成） ---
 import * as mw_api from '../../functions/api/_middleware.js';
 import * as mw_api_manage from '../../functions/api/manage/_middleware.js';
-import * as mw_webdav from '../../functions/webdav/_middleware.js';
 import * as mw_file from '../../functions/file/_middleware.js';
 import * as mw_random from '../../functions/random/_middleware.js';
 import * as mw_upload from '../../functions/upload/_middleware.js';
+import * as mw_webdav from '../../functions/webdav/_middleware.js';
 
 // --- 路由模块（自动生成） ---
 import * as apiManageBatchIndexChunk from '../../functions/api/manage/batch/index/chunk.js';
@@ -54,6 +55,7 @@ import * as uploadHuggingfaceGetUploadUrl from '../../functions/upload/huggingfa
 import * as apiChannels from '../../functions/api/channels.js';
 import * as apiDirectoryTree from '../../functions/api/directoryTree.js';
 import * as apiFetchRes from '../../functions/api/fetchRes.js';
+import * as apiMyFiles from '../../functions/api/my-files.js';
 import * as apiUserConfig from '../../functions/api/userConfig.js';
 import * as random_index from '../../functions/random/index.js';
 import * as upload_index from '../../functions/upload/index.js';
@@ -64,8 +66,8 @@ import * as apiManageMoveCatchAll from '../../functions/api/manage/move/[[path]]
 import * as apiManageRenameCatchAll from '../../functions/api/manage/rename/[[path]].js';
 import * as apiManageTagsCatchAll from '../../functions/api/manage/tags/[[path]].js';
 import * as apiManageWhiteCatchAll from '../../functions/api/manage/white/[[path]].js';
-import * as webdavCatchAll from '../../functions/webdav/[[path]].js';
 import * as fileCatchAll from '../../functions/file/[[path]].js';
+import * as webdavCatchAll from '../../functions/webdav/[[path]].js';
 
 
 // ==================== 自动生成的路由表 ====================
@@ -109,6 +111,7 @@ const routes = [
     { path: '/api/channels', module: apiChannels, middlewares: [mw_api] },
     { path: '/api/directoryTree', module: apiDirectoryTree, middlewares: [mw_api] },
     { path: '/api/fetchRes', module: apiFetchRes, middlewares: [mw_api] },
+    { path: '/api/my-files', module: apiMyFiles, middlewares: [mw_api] },
     { path: '/api/userConfig', module: apiUserConfig, middlewares: [mw_api] },
     { path: '/random', module: random_index, middlewares: [mw_random] },
     { path: '/upload', module: upload_index, middlewares: [mw_upload] },
@@ -119,8 +122,8 @@ const routes = [
     { path: '/api/manage/rename/', module: apiManageRenameCatchAll, middlewares: [mw_api, mw_api_manage], catchAll: true },
     { path: '/api/manage/tags/', module: apiManageTagsCatchAll, middlewares: [mw_api, mw_api_manage], catchAll: true },
     { path: '/api/manage/white/', module: apiManageWhiteCatchAll, middlewares: [mw_api, mw_api_manage], catchAll: true },
-    { path: '/webdav/', module: webdavCatchAll, middlewares: [mw_webdav], catchAll: true },
     { path: '/file/', module: fileCatchAll, middlewares: [mw_file], catchAll: true },
+    { path: '/webdav/', module: webdavCatchAll, middlewares: [mw_webdav], catchAll: true },
 ];
 
 
@@ -271,15 +274,16 @@ async function maybeServeFromCache(request, ctx, producer) {
 
     const cache = caches.default;
     const cacheKey = createCacheKeyRequest(request);
+    const isFile = new URL(request.url).pathname.startsWith('/file/');
     const cachedResponse = await cache.match(cacheKey);
 
     if (cachedResponse) {
-        return request.method === 'HEAD'
-            ? responseFromHeadCache(cachedResponse)
-            : cachedResponse;
+        const safeResponse = isFile ? secureFileResponse(cachedResponse) : cachedResponse;
+        return request.method === 'HEAD' ? responseFromHeadCache(safeResponse) : safeResponse;
     }
 
-    const response = await producer();
+    const produced = await producer();
+    const response = isFile ? secureFileResponse(produced) : produced;
 
     // 按业务代码返回的 Cache-Control 决定是否写入 Worker Cache
     if (isCacheableResponse(request, response)) {

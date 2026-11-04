@@ -442,7 +442,9 @@ export async function buildUniqueFileId(context, fileName, fileType = 'applicati
     const nameType = url.searchParams.get('uploadNameType') || 'default';
     const uploadFolder = url.searchParams.get('uploadFolder') || '';
     // 对上传路径进行安全处理
-    const normalizedFolder = sanitizeUploadFolder(uploadFolder);
+    const requestedFolder = sanitizeUploadFolder(uploadFolder);
+    // Each passport user's files live in their own server-assigned namespace.
+    const normalizedFolder = context.uploader ? `users/${context.uploader.id}/${requestedFolder}`.replace(/\/$/, '') : requestedFolder;
 
     // 处理文件名，移除特殊字符
     fileName = sanitizeFileName(fileName);

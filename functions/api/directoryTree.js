@@ -1,4 +1,4 @@
-import { getDirectoryTree } from '../utils/indexManager';
+import { readIndex, getDirectoryTree } from '../utils/indexManager';
 import { dualAuthCheck } from '../utils/auth/dualAuth';
 import { fetchPageConfig } from '../utils/sysConfig';
 
@@ -43,13 +43,27 @@ export async function onRequestGet(context) {
     }
     
     try {
-        const tree = await getDirectoryTree(context);
-        const cacheTime = url.searchParams.get('cacheTime') || 60;
+        let tree;
+        if (authResult.userId) {
+            const result = await readIndex(context, { ownerId: authResult.userId, count: -1, includeSubdirFiles: true });
+            if (!result.success) throw new Error('Index unavailable');
+            tree = { name: '/', path: '', children: [] };
+            for (const dir of new Set(result.files.map(f => f.metadata?.Directory || '').filter(Boolean))) {
+                let node = tree, path = '';
+                for (const name of dir.split('/').filter(Boolean)) {
+                    path += name + '/';
+                    let child = node.children.find(c => c.name === name);
+                    if (!child) { child = { name, path, children: [] }; node.children.push(child); }
+                    node = child;
+                }
+            }
+        } else if (authResult.authType === 'admin') tree = await getDirectoryTree(context);
+        else tree = { name: '/', path: '', children: [] };
         
         return new Response(JSON.stringify({ tree }), {
             headers: {
                 'Content-Type': 'application/json',
-                'Cache-Control': `private, max-age=${cacheTime}`,
+                'Cache-Control': 'private, no-store',
                 'Access-Control-Allow-Origin': '*',
             }
         });

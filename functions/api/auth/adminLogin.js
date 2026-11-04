@@ -24,17 +24,11 @@ export async function onRequestPost(context) {
 
     const usernameConfigured = !!(adminUsername && adminUsername.trim());
     const passwordConfigured = !!(adminPassword && adminPassword.trim());
-    const adminConfigured = usernameConfigured || passwordConfigured;
 
-    // 管理员未配置，无需认证，直接创建会话
-    if (!adminConfigured) {
-        const { cookie } = await createSession(env, 'admin');
-        return new Response(JSON.stringify({ success: true }), {
-            status: 200,
-            headers: {
-                'Content-Type': 'application/json',
-                'Set-Cookie': cookie,
-            },
+    // Never issue a bootstrap admin session without a configured password.
+    if (!passwordConfigured) {
+        return new Response(JSON.stringify({ error: 'Administrator password not configured' }), {
+            status: 503, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
         });
     }
 

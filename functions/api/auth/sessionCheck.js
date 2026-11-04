@@ -35,7 +35,7 @@ export async function onRequestGet(context) {
     if (passportLoginEnabled(env)) {
         const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
         const admin = await validateSession(env, request, 'admin');
-        if (admin.valid) {
+        if (adminPassword?.trim() && admin.valid) {
             return new Response(JSON.stringify({
                 valid: true, authType: 'admin', adminRequired, userRequired: true, passportLogin: true, uploadAllowed: true,
             }), { status: 200, headers });
@@ -55,7 +55,7 @@ export async function onRequestGet(context) {
 
     // 检查会话
     const sessionResult = await validateAnySession(env, request);
-    if (sessionResult.valid) {
+    if (sessionResult.valid && (sessionResult.session.authType !== 'admin' || adminPassword?.trim())) {
         return new Response(JSON.stringify({
             valid: true,
             authType: sessionResult.session.authType,

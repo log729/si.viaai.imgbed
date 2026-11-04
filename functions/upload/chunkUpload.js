@@ -1,3 +1,4 @@
+import { ownsUploadSession, sessionOwner, validUploadId, notFound } from '../utils/auth/fileOwnership.js';
 import { createS3Client } from '../utils/storage/s3Client.js';
 /* ======= 客户端分块上传处理 ======= */
 import { createResponse, selectConsistentChannel, getUploadIp, getIPAddress, buildUniqueFileId, endUpload } from './uploadTools';
@@ -26,7 +27,7 @@ export async function initializeChunkedUpload(context) {
 
         // 生成唯一的 uploadId
         const timestamp = Date.now();
-        const random = Math.random().toString(36).slice(2, 11);
+        const random = crypto.randomUUID();
         const uploadId = `upload_${timestamp}_${random}`;
 
         // 获取上传IP
@@ -44,6 +45,7 @@ export async function initializeChunkedUpload(context) {
         // 存储上传会话信息
         const sessionInfo = {
             uploadId,
+            ownerId: sessionOwner(context),
             originalFileName,
             originalFileType,
             totalChunks,
@@ -105,6 +107,7 @@ export async function handleChunkUpload(context) {
         }
 
         // 验证上传会话
+        if (!validUploadId(uploadId)) return notFound();
         const sessionKey = `upload_session_${uploadId}`;
         const sessionData = await db.get(sessionKey);
         if (!sessionData) {
@@ -112,6 +115,8 @@ export async function handleChunkUpload(context) {
         }
 
         const sessionInfo = JSON.parse(sessionData);
+        if (!ownsUploadSession(context, sessionInfo)) return notFound();
+        if (!Number.isInteger(chunkIndex) || chunkIndex < 0 || chunkIndex >= sessionInfo.totalChunks) return createResponse('Invalid chunk index', { status: 400 });
 
         // 验证会话信息
         if (sessionInfo.originalFileName !== originalFileName ||
@@ -125,12 +130,12 @@ export async function handleChunkUpload(context) {
         }
 
         // 获取上传渠道
-        const uploadChannel = url.searchParams.get('uploadChannel') || sessionInfo.uploadChannel || 'telegram';
+        const uploadChannel = sessionInfo.uploadChannel || 'telegram';
         if (uploadChannel === 'webdav') {
             return createResponse('Error: WebDAV channel does not support chunked uploads. Please use non-chunked upload within your Cloudflare request body limit.', { status: 400 });
         }
         // 获取指定的渠道名称
-        const channelName = url.searchParams.get('channelName') || sessionInfo.channelName || '';
+        const channelName = sessionInfo.channelName || '';
 
         // 将渠道名称存入 context
         context.specifiedChannelName = channelName;
@@ -186,6 +191,12 @@ export async function handleCleanupRequest(context, uploadId, totalChunks) {
                 error: 'Missing uploadId parameter'
             }), { status: 400, headers: { 'Content-Type': 'application/json' } });
         }
+
+        if (!validUploadId(uploadId)) return notFound();
+        const raw = await getDatabase(context.env).get(`upload_session_${uploadId}`);
+        const session = raw ? JSON.parse(raw) : null;
+        if (!ownsUploadSession(context, session)) return notFound();
+        totalChunks = session.totalChunks;
 
         // 强制清理所有相关数据
         await forceCleanupUpload(context, uploadId, totalChunks);

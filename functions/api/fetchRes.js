@@ -1,3 +1,4 @@
+import { secureFileHeaders } from '../file/contentSecurity.js';
 /**
  * 远程资源代理读取 API
  * 负责在鉴权后拉取请求体中指定 URL 的资源并透传响应内容
@@ -36,7 +37,9 @@ function createProxyHeaders(responseHeaders) {
         headers.delete('content-length');
     }
 
-    return headers;
+    headers.delete('Set-Cookie');
+    headers.set('Cache-Control', 'private, no-store');
+    return secureFileHeaders(headers);
 }
 
 function fetchTarget(url) {
@@ -181,6 +184,7 @@ export async function onRequest(context) {
         hops++;
     }
 
+    if (response.status >= 300 && response.status < 400) return new Response('Too many redirects', { status: 502 });
     const headers = createProxyHeaders(response.headers);
     return new Response(response.body, {
         headers: headers,

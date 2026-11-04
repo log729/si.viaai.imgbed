@@ -1,3 +1,4 @@
+import { ownsUploadSession, validUploadId, notFound } from '../utils/auth/fileOwnership.js';
 import { createS3Client } from '../utils/storage/s3Client.js';
 /* ========== 分块合并处理 ========== */
 import { createResponse, getUploadIp, getIPAddress, selectConsistentChannel, buildUniqueFileId, endUpload, sanitizeUploadFolder } from './uploadTools';
@@ -16,6 +17,7 @@ export async function handleChunkMerge(context) {
     const formdata = await request.formData();
     context.formdata = formdata;
 
+    let sessionAuthorized = false;
     let uploadId, totalChunks, originalFileName, originalFileType, uploadChannel;
     try {
         uploadId = formdata.get('uploadId');
@@ -28,6 +30,7 @@ export async function handleChunkMerge(context) {
         }
 
         // 验证上传会话
+        if (!validUploadId(uploadId)) return notFound();
         const sessionKey = `upload_session_${uploadId}`;
         const sessionData = await db.get(sessionKey);
         if (!sessionData) {
@@ -35,6 +38,7 @@ export async function handleChunkMerge(context) {
         }
 
         const sessionInfo = JSON.parse(sessionData);
+        if (!ownsUploadSession(context, sessionInfo)) return notFound();
 
         // 验证会话信息
         if (sessionInfo.originalFileName !== originalFileName ||
@@ -47,14 +51,16 @@ export async function handleChunkMerge(context) {
             return createResponse('Error: Upload session expired', { status: 410 });
         }
 
+        sessionAuthorized = true;
+
         // 使用会话中的上传渠道，或者从URL参数获取
-        uploadChannel = url.searchParams.get('uploadChannel') || sessionInfo.uploadChannel || 'telegram';
+        uploadChannel = sessionInfo.uploadChannel || 'telegram';
         if (uploadChannel === 'webdav') {
             return createResponse('Error: WebDAV channel does not support chunked uploads. Please use non-chunked upload within your Cloudflare request body limit.', { status: 400 });
         }
 
         // 获取指定的渠道名称（优先URL参数，其次会话信息）
-        const channelName = url.searchParams.get('channelName') || sessionInfo.channelName || '';
+        const channelName = sessionInfo.channelName || '';
         context.specifiedChannelName = channelName;
 
         // 检查分块上传状态
@@ -71,6 +77,7 @@ export async function handleChunkMerge(context) {
         return await startMerge(context, uploadId, totalChunks, originalFileName, originalFileType, uploadChannel);
 
     } catch (error) {
+        if (!sessionAuthorized) return createResponse('Invalid upload session', { status: 400 });
         // 清理失败的multipart uploads
         if (uploadChannel === 'cfr2' || uploadChannel === 's3') {
             waitUntil(cleanupFailedMultipartUploads(context, uploadId, uploadChannel));

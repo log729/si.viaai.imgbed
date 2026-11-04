@@ -1,3 +1,4 @@
+import { readUploadTicket, notFound } from '../../utils/auth/fileOwnership.js';
 import { guardUpload } from '../../utils/auth/passportUpload.js';
 import { createResponse } from '../uploadTools.js';
 
@@ -13,7 +14,10 @@ export async function onRequestPost(context) {
             return guard.response;
         }
 
+        const ticket = await readUploadTicket(env, url.searchParams.get('fullId'), guard.uploader);
+        if (!ticket || ticket.ticketId !== url.searchParams.get('ticket')) return notFound();
         const target = url.searchParams.get('target');
+        if (target !== ticket.completionTarget) return notFound();
         if (!target) {
             return createResponse(JSON.stringify({ error: 'Missing target URL' }), {
                 status: 400,
@@ -35,12 +39,14 @@ export async function onRequestPost(context) {
         const body = await request.text();
         try {
             validateMultipartBody(body);
+            if (JSON.parse(body).oid !== ticket.sha256) return notFound();
         } catch (error) {
             return jsonError(error.message, 400);
         }
 
         const completeResponse = await fetch(targetUrl.toString(), {
             method: 'POST',
+            redirect: 'error',
             headers: {
                 'Accept': 'application/vnd.git-lfs+json',
                 'Content-Type': 'application/vnd.git-lfs+json'
@@ -82,7 +88,7 @@ function jsonError(message, status) {
 }
 
 function isValidCompletionTarget(targetUrl) {
-    return targetUrl.protocol === 'https:' &&
+    return targetUrl.protocol === 'https:' && !targetUrl.username && !targetUrl.password && !targetUrl.port &&
         targetUrl.hostname === 'huggingface.co' &&
         targetUrl.pathname === '/api/complete_multipart';
 }

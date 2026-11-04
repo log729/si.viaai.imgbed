@@ -1,3 +1,4 @@
+import { secureFileHeaders } from './contentSecurity.js';
 /* ======== 文件读取工具函数 ======== */
 
 // 判断请求域名是否在允许的域名列表中
@@ -66,6 +67,7 @@ export function setCommonHeaders(headers, encodedFileName, fileType, cacheContro
     }
 
     headers.set('Cache-Control', cacheControl || FILE_CACHE_CONTROL.PUBLIC);
+    secureFileHeaders(headers);
 }
 
 // 设置Range请求相关头部
@@ -77,7 +79,7 @@ export function setRangeHeaders(headers, rangeStart, rangeEnd, totalSize) {
 
 // 处理HEAD请求的公共函数
 export function handleHeadRequest(headers, etag = null) {
-    const responseHeaders = new Headers();
+    const responseHeaders = new Headers(headers);
 
     // 复制关键头部
     responseHeaders.set('Content-Length', headers.get('Content-Length') || '0');
@@ -93,7 +95,7 @@ export function handleHeadRequest(headers, etag = null) {
 
     return new Response(null, {
         status: 200,
-        headers: responseHeaders,
+        headers: secureFileHeaders(responseHeaders),
     });
 }
 

@@ -175,12 +175,12 @@ export async function onRequest(context) {
 async function getRandomFileList(context, url, dir) {
     // 检查缓存中是否有记录，有则直接返回
     const cache = caches.default;
-    const cacheRes = await cache.match(`${url.origin}/api/randomFileList?dir=${dir}`);
+    const cacheRes = await cache.match(`${url.origin}/api/randomFileList-v2?dir=${dir}`);
     if (cacheRes) {
         return JSON.parse(await cacheRes.text());
     }
 
-    let allRecords = await readIndex(context, { directory: dir, count: -1, includeSubdirFiles: true, accessStatus: 'normal' });
+    let allRecords = await readIndex(context, { directory: dir, count: -1, includeSubdirFiles: true, excludeOwned: true, accessStatus: 'normal' });
 
     // 仅保留记录的name和metadata中的必要字段
     allRecords = allRecords.files?.map(item => {
@@ -193,7 +193,7 @@ async function getRandomFileList(context, url, dir) {
     });
 
     // 缓存结果，缓存时间为24小时
-    await cache.put(`${url.origin}/api/randomFileList?dir=${dir}`, new Response(JSON.stringify(allRecords), {
+    await cache.put(`${url.origin}/api/randomFileList-v2?dir=${dir}`, new Response(JSON.stringify(allRecords), {
         headers: {
             "Content-Type": "application/json",
         }
